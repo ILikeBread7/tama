@@ -1,3 +1,24 @@
+function $(id) {
+	id = id.substr(1);
+	return document.getElementById(id);
+}
+
+HTMLElement.prototype.show = function() {
+	this.style.display = 'inline';
+}
+
+HTMLElement.prototype.hide = function() {
+	this.style.display = 'none';
+}
+
+HTMLElement.prototype.val = function() {
+	return this.value;
+}
+
+HTMLElement.prototype.click = function(listener) {
+	this.addEventListener('click', listener);
+}
+
 function collideGlobal(e){	//for buttons
 	return (e.pageX>=this.x && e.pageX<=this.x+this.w && e.pageY>=this.y && e.pageY<=this.y+this.h);
 }
@@ -5,7 +26,7 @@ function collideGlobal(e){	//for buttons
 var Game={
 	canvas:null,ctx:null,
 	title_img:null,start_img:null,
-	start_img:null,instr_img:null,back_img:null,
+	instr_img:null,back_img:null,
 	tama_stand_img:null,tama_run_img:null,tama_stand_hit_img:null,tama_run_hit_img:null,tama_flame_run:null,tama_flame_stand:null,
 	flame1_img:null,flame2_img:null,
 	raptor1_img:null,raptor2_img:null,
@@ -495,6 +516,7 @@ var Game={
 				}
 				if(!GJAPI.ScoreAdd(0, score, score)){
 					$("#guest").show();
+					$("#guest_name").focus();
 				}
 			});
 		},
@@ -594,14 +616,12 @@ var Game={
 		this.explosion1_img=document.getElementById("explosion1_img");
 		this.explosion2_img=document.getElementById("explosion2_img");
 		this.laser_img=document.getElementById("laser_img");
-		this.ctx=canvas.getContext("2d");
+		this.ctx=this.canvas.getContext("2d");
 		this.phase=0;
 		this.menu.init();
 		this.instructions.init();
 		var game=this;
-		/*this.canvas.onclick=function(e){
-			game.al.clicked(e);
-		}*/
+
 		$("#canvas").click(function(e){
 			game.al.clicked(e);
 		});
@@ -829,6 +849,12 @@ var AL={	//AL - ActionListener
 
 function addGuestScore(){
 	Game.gameplay.addGuestScore();
+}
+
+function guestNameListener(event) {
+	if (event.keyCode === 13) {	// enter
+		addGuestScore();
+	}
 }
 
 function init(){

@@ -2,7 +2,6 @@
 <html>
 	<head>
 		<title>Tama the time traveller</title>
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 		<script src="gj-js-api.js"></script>
 		<script src="script.js"></script>
 	</head>
@@ -10,7 +9,7 @@
 		<canvas id="canvas" width="800" height="600"></canvas>
 		<div id="guest" style="display:none;color:#ffffff;position:absolute;top:475px;left:205px">
 			Your name:
-			<input id="guest_name" type="text"></input>
+			<input id="guest_name" type="text" onkeyup="guestNameListener(event);"></input>
 			<button id="add_score" onclick="addGuestScore();">Add score</button>
 		</div>
 		

@@ -49,8 +49,8 @@ var GJAPI = {};
 
 // ****************************************************************
 // configuration attributes
-GJAPI.iGameID    = 80215;      // # change this
-GJAPI.sGameKey   = "728d5eb7c5d7805274f4a140d813ec76";     // # change this too
+GJAPI.iGameID    = 562638;      // # change this
+GJAPI.sGameKey   = "184ec917d64d04068959612ec816eef0";     // # change this too
 GJAPI.bAutoLogin = true;   // automatically log in users on Game Jolt
 if(GJAPI.iGameID === 0 || GJAPI.sGameKey === "") alert("Game ID or Game Key missing!");
 
