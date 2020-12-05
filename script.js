@@ -187,7 +187,8 @@ var Game={
 			hit_time:-this.recovery_time,
 			fuel:900,
 			shooting:false,
-			direction:0,	//0=nothing, 1=left, 2=right, 3=up, 4=down
+			directionX: 0,	//0=nothing, 1=left, 2=right
+			directionY: 0,	//0=nothing, 3=up, 4=down
 			acc:0,	//acceleration 0=nothing, -1=decrease, 1=increase
 			
 			hit:function(){
@@ -226,7 +227,8 @@ var Game={
 				return this.speed*this.speed_multiplier;
 			},
 			resetTemps:function(){
-				this.direction=0;
+				this.directionX = 0;
+				this.directionY = 0;
 				this.acc=0;
 			},
 			accelerate:function(){
@@ -236,20 +238,21 @@ var Game={
 			},
 			move:function(gameListener){
 				this.x+=this.getSpeed();
-				gameListener.tamaMove(this.direction);
+				gameListener.tamaMove(this.directionX, this.directionY);
 				this.shoot();
 				this.accelerate();
 				this.resetTemps();
 				this.timer++;
 			},
-			moveDirection:function(direction){
-				if(direction==1)
+			moveDirection:function(directionX, directionY){
+				if(directionX === 1)
 					this.x-=this.movement_speed;
-				else if(direction==2)
+				else if(directionX === 2)
 					this.x+=this.movement_speed;
-				else if(direction==3)
+
+				if(directionY === 3)
 					this.y-=this.movement_speed;
-				else if(direction==4)
+				else if(directionY === 4)
 					this.y+=this.movement_speed;
 			},
 			init:function(game){
@@ -696,11 +699,16 @@ var AL={	//AL - ActionListener
 				this.keys[i]=false;
 		},
 		setTamaDirection:function(){
-			var dir=0;
-			for(var i=0;i<4;i++)
+			var dirX = 0;
+			var dirY = 0;
+			for(var i=0;i<2;i++)
 				if(this.keys[i])
-					dir=i+1;
-			this.game.gameplay.tama.direction=dir;
+					dirX=i+1;
+			for(var i=2;i<4;i++)
+				if(this.keys[i])
+					dirY=i+1;
+			this.game.gameplay.tama.directionX=dirX;
+			this.game.gameplay.tama.directionY=dirY;
 		},
 		setTamaShoot:function(){
 			this.game.gameplay.tama.shooting=this.keys[5];
@@ -767,19 +775,21 @@ var AL={	//AL - ActionListener
 				break;
 			}
 		},
-		inBounds:function(direction){
+		inBounds:function(directionX, directionY){
 			var tama=this.game.gameplay.tama;
 			var x=tama.x-this.game.gameplay.left_scroll;
 			var y=tama.y;
 			var w=tama.w;
 			var h=tama.h;
-			switch(direction){
+			switch(directionX){
 				case 1:
 					x-=tama.movement_speed;
 				break;
 				case 2:
 					x+=tama.movement_speed;
 				break;
+			}
+			switch(directionY){
 				case 3:
 					y-=tama.movement_speed;
 				break;
@@ -787,7 +797,10 @@ var AL={	//AL - ActionListener
 					y+=tama.movement_speed;
 				break;
 			}
-			return (x>=0 && x+w<=800 && y>=85 && y+h<=515);
+			return {
+				x: x >= 0 && x + w <= 800,
+				y: y >= 85 && y + h <= 515
+			};
 		},
 		collides:function(tama,rocks,dinosaurs,lasers){
 			if(tama.isHit())
@@ -809,9 +822,10 @@ var AL={	//AL - ActionListener
 			}
 			return false;
 		},
-		tamaMove:function(direction){
-			if(this.inBounds(direction))
-				this.game.gameplay.tama.moveDirection(direction);
+		tamaMove:function(directionX, directionY){
+			var isInBounds = this.inBounds(directionX, directionY);
+			if(isInBounds.x || isInBounds.y)
+				this.game.gameplay.tama.moveDirection(isInBounds.x ? directionX : 0, isInBounds.y ? directionY : 0);
 			if(this.collides(this.game.gameplay.tama,this.game.gameplay.rocks,this.game.gameplay.dinosaurs,this.game.gameplay.lasers))
 				this.game.gameplay.tama.hit();
 		}
