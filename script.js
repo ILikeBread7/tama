@@ -526,8 +526,20 @@ var Game={
 			this.game.ctx.fillText("Top scores:",210,150);
 			this.game.ctx.fillText("Press ESC to exit or Enter to play again!",210,520);
 			var ctx=this.game.ctx;
+			var scoreOnLeaderBoard = false;
+			var adjustForPlayerScore = 0;
 			GJAPI.ScoreFetch(0, false, 10, function(e){
-				for(var i=0;i<e.scores.length;i++){
+				for(var i=0;i<e.scores.length&&i+adjustForPlayerScore<10;i++){
+					if (!scoreOnLeaderBoard && score > e.scores[i].sort) {
+						scoreOnLeaderBoard = true;
+						adjustForPlayerScore = 1;
+						ctx.fillStyle = "#00ff00";
+						ctx.fillText((i+1)+": [You!] "+score,210,180+i*30);
+						if (i + adjustForPlayerScore === 10) {
+							break;
+						}
+					}
+
 					var name;
 					if(e.scores[i].user){
 						ctx.fillStyle="#ffffff";
@@ -537,8 +549,9 @@ var Game={
 						name=e.scores[i].guest;
 						ctx.fillStyle="#ffff00";
 					}
-					ctx.fillText((i+1)+": "+name+" "+e.scores[i].sort,210,180+i*30);
+					ctx.fillText((i+1+adjustForPlayerScore)+": "+name+" "+e.scores[i].sort,210,180+(i+adjustForPlayerScore)*30);
 				}
+
 				if(!GJAPI.ScoreAdd(0, score, score)){
 					$("#guest").show();
 					$("#guest_name").focus();
