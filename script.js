@@ -285,11 +285,11 @@ var Game={
 		},
 		dots:{
 			dots:[],
-			colors:["#727609","#6f153d","#1d1883","#187421","#d97c0e"],
+			colors:["#c9ce4f", "#c3c83b", "#b2b633"],
 			
 			init:function(){
 				if(this.dots.length==0)
-					for(var i=0;i<35;i++)
+					for(var i=0;i<60;i++)
 						this.dots.push({
 							x:Math.floor(Math.random()*820),
 							y:Math.floor(Math.random()*400)+100,
@@ -687,17 +687,19 @@ var Game={
 		this.ctx.drawImage(but.img,but.x,but.y);
 		
 		this.ctx.fillStyle="#000000";
-		this.ctx.fillRect(210,100,400,380);
+		this.ctx.fillRect(185,100,450,380);
 		
 		this.ctx.fillStyle="#ffffff";
 		this.ctx.font="20px Verdana";
-		this.ctx.fillText("In game controls:",215,120);
-		this.ctx.fillText("WASD - movement",215,150);
-		this.ctx.fillText("H - slow down, K - accelerate",215,180);
-		this.ctx.fillText("J - fire",215,210);
-		this.ctx.fillText("P - pause, ESC - exit to title",215,240);
+		this.ctx.fillText("In game controls:",190,120);
+		this.ctx.fillText("WASD - movement",190,150);
+		this.ctx.fillText("H - slow down",190,180);
+		this.ctx.fillText("K - accelerate",190,210);
+		this.ctx.fillText("J - fire",190,240);
+		this.ctx.fillText("P - pause",190,270);
+		this.ctx.fillText("ESC - exit to title",190,300);
 		
-		this.ctx.fillText("Total score = distance * (1 + kills)",215,300);
+		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",190,360);
 	}
 }
 
