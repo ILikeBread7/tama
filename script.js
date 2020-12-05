@@ -480,6 +480,15 @@ var Game={
 			if(this.tama.shooting)
 				this.game.ctx.drawImage(this.tama.getFlameSprite(),this.tama.x+this.tama.w-this.left_scroll,this.tama.y);
 		},
+		drawPause: function() {
+			this.game.ctx.fillStyle = '#000000';
+			this.game.ctx.fillRect(300, 250, 200, 100);
+			this.game.ctx.fillStyle = "#ffffff";
+			this.game.ctx.font = "20px Verdana";
+			this.game.ctx.fillText('Pause', 370, 280);
+			this.game.ctx.fillText('Press P to continue', 303, 305);
+			this.game.ctx.fillText('or ESC to exit', 330, 330);
+		},
 		addBoom:function(x,down_y){
 			this.booms.add(x,down_y);
 		},
@@ -558,7 +567,10 @@ var Game={
 					gameplay.game.drawTitle();
 					gameplay.game.drawMenu();
 				}
-				else if(!gameplay.pause){
+				else if(gameplay.pause) {
+					gameplay.drawPause();
+				}
+				else {
 					gameplay.left_scroll+=gameplay.tama.getSpeed();
 					gameplay.game.al.gameListener.setTamaShoot();
 					gameplay.game.al.gameListener.setTamaDirection();
