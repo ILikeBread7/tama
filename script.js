@@ -130,39 +130,30 @@ var Game={
 						game.gameplay.lasers.add(dino.x,dino.y+Math.floor(dino.h-game.gameplay.lasers.h)/2);
 				}
 			},
-			addSingleDino:function(game){
-				var dinos=this;
-				this.dinosaurs.push({
+			newDino: function(game, single) {
+				var dinos = this;
+				return {
 					points:1,
+					maxHp:10,
 					hp:10,
 					w:116,
 					h:60,
 					timer:0,
-					speed:(Math.floor(Math.random()*2)+1),
-					x:this.width+800+game.gameplay.left_scroll,
+					speed: single ? (Math.floor(Math.random()*2)+1) : (Math.floor(Math.random()*7)-2),
+					x: single ? (this.width+800+game.gameplay.left_scroll) : (Math.floor(Math.random()*this.width)+800+game.gameplay.left_scroll),
 					y:Math.floor(Math.random()*(430-60))+85,
 					getSprite:function(){
 						return dinos.sprites[Math.floor(this.timer*Math.abs(this.speed)/20)%2];
 					}
-				});
+				}
+			},
+			addSingleDino:function(game){
+				this.newDino(game, true);
 			},
 			addDinosaurs:function(game){
-				var dinos=this;
 				if(this.all_on_screen){
 					for(var i=0;i<this.number-1;i++){
-						this.dinosaurs.push({
-							points:1,
-							hp:10,
-							w:116,
-							h:60,
-							timer:0,
-							speed:Math.floor(Math.random()*7)-2,
-							x:Math.floor(Math.random()*this.width)+800+game.gameplay.left_scroll,
-							y:Math.floor(Math.random()*(430-60))+85,
-							getSprite:function(){
-								return dinos.sprites[Math.floor(this.timer*Math.abs(this.speed)/20)%2];
-							}
-						});
+						this.dinosaurs.push(this.newDino(game, false));
 					}
 					this.addSingleDino(game);
 				}
@@ -371,6 +362,22 @@ var Game={
 				this.game.ctx.drawImage(this.rocks.sprite,rock.x-this.left_scroll,rock.y);
 			}
 		},
+		drawDinoLifeBar: function(hp, maxHp, dinoX, dinoY) {
+			if (hp < maxHp) {
+				var borderWidth = 4;
+				this.game.ctx.fillStyle = '#000000';
+				this.game.ctx.fillRect(dinoX + 20 - borderWidth, dinoY - 10 - borderWidth, 80 + borderWidth * 2 , 20  + borderWidth * 2);
+				var color = '#00FF00';
+				var hpRatio = hp / maxHp;
+				if (hpRatio <= 0.33) {
+					color = '#FF0000'
+				} else if (hpRatio <= 0.66) {
+					color = '#FFFF00'
+				}
+				this.game.ctx.fillStyle = color;
+				this.game.ctx.fillRect(dinoX + 20, dinoY - 10, 80 * hpRatio, 20);
+			}
+		},
 		drawDinosaurs:function(){
 			this.dinosaurs.all_on_screen=true;
 			for(var i=0;i<this.dinosaurs.dinosaurs.length;i++){
@@ -386,6 +393,7 @@ var Game={
 					dino.speed--;
 				}
 				this.game.ctx.drawImage(dino.getSprite(),dino.x-this.left_scroll,dino.y);
+				this.drawDinoLifeBar(dino.hp, dino.maxHp, dino.x - this.left_scroll, dino.y);
 			}
 		},
 		drawBooms:function(){
@@ -418,6 +426,9 @@ var Game={
 				sec="0"+sec;
 			return min+":"+sec;
 		},
+		calculateTotalScore: function() {
+			return Math.floor(this.tama.x/100*(1+this.points));
+		},
 		drawBackground:function(){
 			this.game.ctx.fillStyle="#291eff";
 			this.game.ctx.fillRect(0,0,800,45);
@@ -432,13 +443,15 @@ var Game={
 			this.game.ctx.font="20px Verdana";
 			this.game.ctx.fillText("Time:",15,30);
 			this.game.ctx.fillText("Distance:",175,30);
-			this.game.ctx.fillText("Points:",435,30);
+			this.game.ctx.fillText("Kills:",435,30);
 			this.game.ctx.fillText("Speed:",670,30);
+			this.game.ctx.fillText("Total score:",225,585);
 			
 			this.game.ctx.fillText(this.timeFormat(this.time),80,30);
 			this.game.ctx.fillText(Math.floor(this.tama.x/100),275,30);
-			this.game.ctx.fillText(this.points,510,30);
+			this.game.ctx.fillText(this.points,490,30);
 			this.game.ctx.fillText(this.tama.speed,745,30);
+			this.game.ctx.fillText(this.calculateTotalScore(),345,585);
 			
 			this.game.ctx.fillText("Fuel:",620,585);
 			this.game.ctx.fillStyle="#000000";
@@ -490,16 +503,16 @@ var Game={
 				}
 		},
 		drawScores:function(){
-			var score=Math.floor(this.tama.x/100*(1+this.points));
+			var score=this.calculateTotalScore();
 			this.score=score;
 			this.game.ctx.fillStyle="#000000";
-			this.game.ctx.fillRect(200,100,400,430);
+			this.game.ctx.fillRect(200,100,420,430);
 			
 			this.game.ctx.fillStyle="#ffffff";
 			this.game.ctx.font="20px Verdana";
 			this.game.ctx.fillText("Your total score: "+score,210,120);
 			this.game.ctx.fillText("Top scores:",210,150);
-			this.game.ctx.fillText("Press ESC to exit",210,520);
+			this.game.ctx.fillText("Press ESC to exit or Enter to play again!",210,520);
 			var ctx=this.game.ctx;
 			GJAPI.ScoreFetch(0, false, 10, function(e){
 				for(var i=0;i<e.scores.length;i++){
@@ -656,7 +669,7 @@ var Game={
 		this.ctx.fillText("J - fire",215,210);
 		this.ctx.fillText("P - pause, ESC - exit to title",215,240);
 		
-		this.ctx.fillText("total score = distance*(1+points)",215,300);
+		this.ctx.fillText("Total score = distance * (1 + kills)",215,300);
 	}
 }
 
@@ -791,7 +804,10 @@ var AL={	//AL - ActionListener
 				this.game.gameplay.tama.hit();
 		}
 	},
-	
+	startGame: function() {
+		this.game.phase = 2;	// 2=gameplay
+		this.game.gameplay.init(this.game);
+	},
 	listenButton:function(id){
 		if(id==1){	//instr_button
 			this.game.phase=1;	//1=instruction
@@ -799,8 +815,7 @@ var AL={	//AL - ActionListener
 			this.game.drawInstructions();
 		}
 		else if(id==0){	//play button
-			this.game.phase=2;	//2=gameplay
-			this.game.gameplay.init(this.game);
+			this.startGame();
 		}
 	},
 	listenBackButton:function(){
@@ -825,6 +840,8 @@ var AL={	//AL - ActionListener
 			this.gameListener.resetKeys();
 			$("#guest").hide();
 			this.listenBackButton();
+		} else if (e.keyCode === 13 && $('#guest').style.display === 'none') {
+			this.startGame();
 		}
 	},
 	clicked:function(e){
