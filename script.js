@@ -73,6 +73,7 @@ var Game={
 		score:-1,
 		left_scroll:0,
 		points:0,
+		bonus:0,
 		time:0,
 		initialized:false,
 		rocks:{
@@ -342,6 +343,69 @@ var Game={
 				this.sprite=game.laser_img;
 			}
 		},
+		superman: {
+			sprites: [],
+			x: -130,
+			y: 42,
+			speed: 5,
+			active: false,
+			timer: 0,
+			pointsActivated: 0,
+
+			activate: function(points) {
+				if (points > this.pointsActivated) {
+					this.active = true;
+					this.pointsActivated = points;
+				}
+			},
+			move: function() {
+				if (this.active) {
+					this.x += this.speed;
+					this.timer++;
+				}
+				if (this.x > 800) {
+					this.reset();
+					return true;
+				}
+				return false;
+			},
+			reset: function() {
+				this.x = -130;
+				this.active = false;
+				this.timer = 0;
+			},
+			getSprite: function() {
+				return this.sprites[Math.floor(this.timer / 10) % 2];
+			},
+			getPoints: function() {
+				return 100 * this.pointsActivated;
+			},
+			init: function(game) {
+				if (this.sprites.length === 0) {
+					this.sprites.push(game.superman1_img, game.superman2_img);
+				}
+				this.pointsActivated = 0;
+				this.reset();
+			}
+		},
+		supermanPoints: {
+			active: false,
+			maxTimer: 60 * 3,
+			timer: 0,
+
+			move: function() {
+				if (this.active) {
+					this.timer++;
+				}
+				if (this.timer >= this.maxTimer) {
+					this.reset();
+				}
+			},
+			reset: function() {
+				this.timer = 0;
+				this.active = false;
+			}
+		},
 		drawDots:function(){
 			for(var i=0;i<this.dots.dots.length;i++){
 				var dot=this.dots.dots[i];
@@ -421,6 +485,20 @@ var Game={
 				laser.timer++;
 			}
 		},
+		drawSuperman: function() {
+			if (this.superman.active) {
+				this.game.ctx.drawImage(this.superman.getSprite(), this.superman.x, this.superman.y);
+			}
+		},
+		drawSupermanPoints: function() {
+			if (this.supermanPoints.active) {
+				this.game.ctx.font = '24px Verdana';
+				this.game.ctx.fillStyle = '#ffffff';
+				this.game.ctx.strokeStyle = '#ff0000';
+				this.game.ctx.fillText(this.superman.getPoints(), 720, this.superman.y + 30);
+				this.game.ctx.strokeText(this.superman.getPoints(), 720, this.superman.y + 30);
+			}
+		},
 		timeFormat:function(time){
 			var t=time/60;
 			var min=Math.floor(t/60);
@@ -430,7 +508,7 @@ var Game={
 			return min+":"+sec;
 		},
 		calculateTotalScore: function() {
-			return Math.floor(this.tama.x/100*(1+this.points));
+			return Math.floor(this.tama.x/100*(1+this.points)) + this.bonus;
 		},
 		drawBackground:function(){
 			this.game.ctx.fillStyle="#291eff";
@@ -594,6 +672,14 @@ var Game={
 					gameplay.dinosaurs.moveDinosaurs(gameplay.game);
 					gameplay.lasers.moveLasers();
 					gameplay.checkDinosaurFlame();
+					if (gameplay.points % 10 === 0) {
+						gameplay.superman.activate(gameplay.points);
+					}
+					if (gameplay.superman.move()) {
+						gameplay.bonus += gameplay.superman.getPoints();
+						gameplay.supermanPoints.active = true;
+					}
+					gameplay.supermanPoints.move();
 					gameplay.drawBackground();
 					gameplay.drawHearts();
 					gameplay.drawFuel();
@@ -604,6 +690,8 @@ var Game={
 					gameplay.drawTama();
 					gameplay.drawBooms();
 					gameplay.drawLasers();
+					gameplay.drawSuperman();
+					gameplay.drawSupermanPoints();
 					gameplay.time++;
 					if(gameplay.time%(60*20)==0)
 						gameplay.rocks.increaseRockNumber();
@@ -622,12 +710,15 @@ var Game={
 			this.game=game;
 			this.left_scroll=0;
 			this.points=0;
+			this.bonus=0;
 			this.tama.init(game);
 			this.rocks.init(game);
 			this.lasers.init(game);
 			this.dinosaurs.init(game);
 			this.booms.init(game);
 			this.dots.init();
+			this.superman.init(game);
+			this.supermanPoints.reset();
 			this.drawBackground();
 			this.pause=false;
 			this.stop=false;
@@ -657,6 +748,8 @@ var Game={
 		this.explosion1_img=document.getElementById("explosion1_img");
 		this.explosion2_img=document.getElementById("explosion2_img");
 		this.laser_img=document.getElementById("laser_img");
+		this.superman1_img=document.getElementById("superman1_img");
+		this.superman2_img=document.getElementById("superman2_img");
 		this.ctx=this.canvas.getContext("2d");
 		this.phase=0;
 		this.menu.init();
