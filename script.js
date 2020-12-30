@@ -23,6 +23,133 @@ function collideGlobal(e){	//for buttons
 	return (e.pageX>=this.x && e.pageX<=this.x+this.w && e.pageY>=this.y && e.pageY<=this.y+this.h);
 }
 
+const BGM_TRACK = 'Juhani Junkala [Retro Game Music Pack] Level 1.ogg';
+const EXPLOSION_TRACK = '8bit_bomb_explosion.ogg';
+const TAMA_DAMAGE_TRACK = '7.ogg';
+const LASER_TRACK = 'laser5.ogg';
+const ENEMY_DAMAGE_TRACK = 'Skeleton Roar.ogg';
+const FIRE_TRACK = 'qubodupFireLoop.ogg';
+const SUPERMAN_POINTS_TRACK = 'Jingle_Win_00.ogg';
+const SUPERMAN_FLYING_TRACK = 'Climb_Rope_Loop_00.ogg';
+
+const audioHandler = (() => {
+	const trackNames = [
+		BGM_TRACK,
+		EXPLOSION_TRACK,
+		TAMA_DAMAGE_TRACK,
+		LASER_TRACK,
+		ENEMY_DAMAGE_TRACK,
+		FIRE_TRACK,
+		SUPERMAN_POINTS_TRACK,
+		SUPERMAN_FLYING_TRACK
+	];
+
+	const trackVolumes = new Map([
+		[BGM_TRACK, 0.3],
+		[EXPLOSION_TRACK, 2],
+		[TAMA_DAMAGE_TRACK, 1],
+		[LASER_TRACK, 2],
+		[ENEMY_DAMAGE_TRACK, 2],
+		[FIRE_TRACK, 0.5],
+		[SUPERMAN_POINTS_TRACK, 1],
+		[SUPERMAN_FLYING_TRACK, 1]
+	]);
+
+	let tracksMapPromise = null;
+	let audioCtx = null;
+
+	const playFunc = (track, loop, volume) => {
+		const audioBuffer = track;
+		const trackSource = audioCtx.createBufferSource();
+
+		const gainNode = audioCtx.createGain();
+		trackSource.loop = loop;
+		trackSource.buffer = audioBuffer;
+		trackSource.connect(gainNode).connect(audioCtx.destination);
+
+		gainNode.gain.value = volume;
+
+		trackSource.start();
+		return trackSource;
+	}
+
+
+	let currentBgm = { name: null, track: null };
+	let currentLoopingEffects = [];
+
+	return {
+		init: function() {
+			if (tracksMapPromise !== null) {
+				return;
+			}
+			tracksMapPromise = (async () => {
+				const AudioContext = window.AudioContext || window.webkitAudioContext;
+				audioCtx = new AudioContext();
+		
+				const tracks = await Promise.all(trackNames.map(async trackName => {
+					const response = await fetch(`audio/${trackName}`);
+					const arrayBuffer = await response.arrayBuffer();
+					const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+					return audioBuffer;
+				}));
+			
+				return new Map((() => {
+					const result = [];
+					for (let i = 0; i < trackNames.length; i++) {
+						result.push([trackNames[i], tracks[i]]);
+					}
+					return result;
+				})());
+			})();
+		},
+		playBgm: function(trackName) {
+			if (trackName === currentBgm.name) {
+				return;
+			}
+			tracksMapPromise.then(tm => {
+				const track = tm.get(trackName);
+				if (currentBgm.track !== null) {
+					currentBgm.track.stop();
+				}
+				currentBgm = { name: trackName, track: playFunc(track, true, trackVolumes.get(trackName)) };
+			});
+		},
+		playEffect: function(trackName) {
+			tracksMapPromise.then(tm => {
+				const track = tm.get(trackName);
+				playFunc(track, false, trackVolumes.get(trackName));
+			});
+		},
+		playLoopingEffect: function(trackName) {
+			const effectIndex = currentLoopingEffects.findIndex(e => e.name === trackName);
+			if (effectIndex >= 0) {
+				return;
+			}
+			tracksMapPromise.then(tm => {
+				const track = tm.get(trackName);
+				const volume = trackName === ENEMY_DAMAGE_TRACK ? 5 : 1;
+				currentLoopingEffects.push({ name: trackName, track: playFunc(track, true, trackVolumes.get(trackName)) });
+			});
+		},
+		stopLoopingEffect: function(trackName) {
+			const effectIndex = currentLoopingEffects.findIndex(e => e.name === trackName);
+			if (effectIndex >= 0) {
+				currentLoopingEffects[effectIndex].track.stop();
+				currentLoopingEffects.splice(effectIndex, 1);
+			}
+		},
+		stopAll: function() {
+			if (currentBgm.track !== null) {
+				currentBgm.track.stop();
+				currentBgm = { name: null, track: null };
+			}
+			currentLoopingEffects.forEach(e => e.track.stop());
+			currentLoopingEffects = [];
+		}
+	};
+
+})();
+
 var Game={
 	canvas:null,ctx:null,
 	title_img:null,start_img:null,
@@ -110,6 +237,8 @@ var Game={
 				this.number=1;
 				this.all_on_screen=true;
 				this.addRocks(game);
+				audioHandler.init();
+				audioHandler.playBgm(BGM_TRACK);
 			}
 		},
 		dinosaurs:{
@@ -127,8 +256,10 @@ var Game={
 					if(dino.x-game.gameplay.left_scroll<=800)
 						dino.x+=dino.speed;
 					dino.timer++;
-					if(dino.timer%this.laser_freq==0)
+					if(dino.timer%this.laser_freq==0) {
 						game.gameplay.lasers.add(dino.x,dino.y+Math.floor(dino.h-game.gameplay.lasers.h)/2);
+						audioHandler.playEffect(LASER_TRACK);
+					}
 				}
 			},
 			newDino: function(game, single) {
@@ -196,6 +327,7 @@ var Game={
 				this.speed=1;
 				this.hit_time=this.timer;
 				this.hp--;
+				audioHandler.playEffect(TAMA_DAMAGE_TRACK);
 			},
 			isHit:function(){
 				return this.timer-this.hit_time<this.recovery_time;
@@ -314,6 +446,7 @@ var Game={
 						return booms.sprites[Math.floor(this.timer/10)%2];
 					}
 				});
+				audioHandler.playEffect(EXPLOSION_TRACK);
 			},
 			init:function(game){
 				this.booms=[];
@@ -362,6 +495,7 @@ var Game={
 				if (this.active) {
 					this.x += this.speed;
 					this.timer++;
+					audioHandler.playLoopingEffect(SUPERMAN_FLYING_TRACK);
 				}
 				if (this.x > 800) {
 					this.reset();
@@ -373,6 +507,7 @@ var Game={
 				this.x = -130;
 				this.active = false;
 				this.timer = 0;
+				audioHandler.stopLoopingEffect(SUPERMAN_FLYING_TRACK);
 			},
 			getSprite: function() {
 				return this.sprites[Math.floor(this.timer / 10) % 2];
@@ -558,8 +693,12 @@ var Game={
 		},
 		drawTama:function(){
 			this.game.ctx.drawImage(this.tama.getSprite(),this.tama.x-this.left_scroll,this.tama.y);
-			if(this.tama.shooting)
+			if(this.tama.shooting) {
 				this.game.ctx.drawImage(this.tama.getFlameSprite(),this.tama.x+this.tama.w-this.left_scroll,this.tama.y);
+				audioHandler.playLoopingEffect(FIRE_TRACK);
+			} else {
+				audioHandler.stopLoopingEffect(FIRE_TRACK);
+			}
 		},
 		drawPause: function() {
 			this.game.ctx.fillStyle = '#000000';
@@ -574,6 +713,7 @@ var Game={
 			this.booms.add(x,down_y);
 		},
 		checkDinosaurFlame(){
+			let isHit = false;
 			if(this.tama.shooting)
 				for(var i=0;i<this.dinosaurs.dinosaurs.length;i++){
 					var dino=this.dinosaurs.dinosaurs[i];
@@ -582,6 +722,7 @@ var Game={
 					var flame_w=128;
 					var flame_h=64;
 					if(dino.x<flame_x+flame_w && dino.x+dino.w>flame_x && dino.y+dino.h>flame_y && dino.y<flame_y+flame_h){
+						isHit = true;
 						dino.hp--;
 						if(dino.hp<=0){
 							this.dinosaurs.dinosaurs.splice(i,1);
@@ -591,6 +732,11 @@ var Game={
 						}
 					}
 				}
+			if (isHit) {
+				audioHandler.playLoopingEffect(ENEMY_DAMAGE_TRACK);
+			} else {
+				audioHandler.stopLoopingEffect(ENEMY_DAMAGE_TRACK);
+			}
 		},
 		drawScores:function(){
 			var score=this.calculateTotalScore();
@@ -678,6 +824,7 @@ var Game={
 					if (gameplay.superman.move()) {
 						gameplay.bonus += gameplay.superman.getPoints();
 						gameplay.supermanPoints.active = true;
+						audioHandler.playEffect(SUPERMAN_POINTS_TRACK);
 					}
 					gameplay.supermanPoints.move();
 					gameplay.drawBackground();
@@ -767,6 +914,7 @@ var Game={
 		});
 	},
 	drawTitle:function(){
+		audioHandler.stopAll();
 		this.ctx.drawImage(this.title_img,0,0);
 	},
 	drawMenu:function(){
