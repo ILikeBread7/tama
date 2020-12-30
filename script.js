@@ -356,8 +356,12 @@ var Game={
 			getFlameSprite:function(){
 				return this.flame_sprites[Math.floor(this.timer/10)%2];
 			},
+			getSpeedModifier: function() {
+				const seconds = this.timer / 60;
+				return 1 + seconds / 300;
+			},
 			getSpeed:function(){
-				return this.speed*this.speed_multiplier;
+				return this.speed * this.speed_multiplier * this.getSpeedModifier();
 			},
 			resetTemps:function(){
 				this.directionX = 0;
