@@ -4,6 +4,11 @@
 		<title>Tama the time traveller</title>
 		<script src="gj-js-api.js"></script>
 		<script src="script.js"></script>
+		<style>
+			a {
+				color: #fff;
+			}
+		</style>
 	</head>
 	<body style="margin:auto" onload="init();">
 		<canvas id="canvas" width="800" height="600"></canvas>
@@ -11,6 +16,16 @@
 			Your name:
 			<input id="guest_name" type="text" onkeyup="guestNameListener(event);"></input>
 			<button id="add_score" onclick="addGuestScore();">Add score</button>
+		</div>
+		<div id="credits" style="font-size:8px;color:#ffffff;background-color:rgba(0, 0, 0, 0.6);position:absolute;top:290px;left:5px;width:280px;padding:5px">
+			Music and sound effects by:
+			<p>Fire Loop by Iwan 'qubodup' Gabovitch <a target="_blank" href="https://opengameart.org/users/qubodup">https://opengameart.org/users/qubodup</a></p>
+			<p>bomb_explosion_8bit by Luke.RUSTLTD <a target="_blank" href="https://opengameart.org/content/bombexplosion8bit">https://opengameart.org/content/bombexplosion8bit</a></p>
+			<p>5 Chiptunes (Action) by SubspaceAudio <a target="_blank" href="https://opengameart.org/content/5-chiptunes-action">https://opengameart.org/content/5-chiptunes-action</a></p>
+			<p>63 Digital sound effects (lasers, phasers, space etc.) by Kenney <a target="_blank" href="https://www.kenney.nl">https://www.kenney.nl</a></p>
+			<p>Retro Monster Roar by greg300 <a target="_blank" href="https://opengameart.org/content/retro-monster-roar">https://opengameart.org/content/retro-monster-roar</a></p>
+			<p>Punch, slap, n' kick by CGEffex <a target="_blank" href="https://freesound.org/people/CGEffex/sounds/98341/">https://freesound.org/people/CGEffex/sounds/98341/</a></p>
+			<p>8-Bit Sound Effects Library by Little Robot Sound Factory <a target="_blank" href="https://www.littlerobotsoundfactory.com">https://www.littlerobotsoundfactory.com</a></p>
 		</div>
 		
 		<img id="title_img" src="title.png" style="display:none"><img/>

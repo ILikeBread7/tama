@@ -907,21 +907,22 @@ var Game={
 		this.ctx.drawImage(this.title_img,0,0);
 
 		const instructionsOffset = 190;
+		const leftOffset = 300;
 
 		this.ctx.fillStyle="#000000";
-		this.ctx.fillRect(185,100+instructionsOffset,450,270);
+		this.ctx.fillRect(leftOffset,100+instructionsOffset,450,270);
 		
 		this.ctx.fillStyle="#ffffff";
 		this.ctx.font="20px Verdana";
-		this.ctx.fillText("In game controls:",190,120+instructionsOffset);
-		this.ctx.fillText("WASD - movement",190,150+instructionsOffset);
-		this.ctx.fillText("H - slow down",190,180+instructionsOffset);
-		this.ctx.fillText("K - accelerate",190,210+instructionsOffset);
-		this.ctx.fillText("J - fire",190,240+instructionsOffset);
-		this.ctx.fillText("P - pause",190,270+instructionsOffset);
-		this.ctx.fillText("ESC - exit to title",190,300+instructionsOffset);
+		this.ctx.fillText("In game controls:",leftOffset+5,120+instructionsOffset);
+		this.ctx.fillText("WASD - movement",leftOffset+5,150+instructionsOffset);
+		this.ctx.fillText("H - slow down",leftOffset+5,180+instructionsOffset);
+		this.ctx.fillText("K - accelerate",leftOffset+5,210+instructionsOffset);
+		this.ctx.fillText("J - fire",leftOffset+5,240+instructionsOffset);
+		this.ctx.fillText("P - pause",leftOffset+5,270+instructionsOffset);
+		this.ctx.fillText("ESC - exit to title",leftOffset+5,300+instructionsOffset);
 		
-		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",190,360+instructionsOffset);
+		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",leftOffset+5,360+instructionsOffset);
 	},
 	drawMenu:function(){
 		var but = this.menu.button;
