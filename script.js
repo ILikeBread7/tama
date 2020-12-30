@@ -905,6 +905,7 @@ var Game={
 		audioHandler.stopAll();
 		this.menu.button.hover = false;
 		this.ctx.drawImage(this.title_img,0,0);
+		$('#credits').show();
 
 		const instructionsOffset = 190;
 		const leftOffset = 300;
@@ -1074,6 +1075,7 @@ var AL={	//AL - ActionListener
 	},
 	startGame: function() {
 		this.game.phase = 2;	// 2=gameplay
+		$('#credits').hide();
 		this.game.gameplay.init(this.game);
 	},
 	listenBackButton:function(){
