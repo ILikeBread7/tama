@@ -152,8 +152,7 @@ const audioHandler = (() => {
 
 var Game={
 	canvas:null,ctx:null,
-	title_img:null,start_img:null,
-	instr_img:null,back_img:null,
+	title_img:null,start_img:null,start_img_hover:null,
 	tama_stand_img:null,tama_run_img:null,tama_stand_hit_img:null,tama_run_hit_img:null,tama_flame_run:null,tama_flame_stand:null,
 	flame1_img:null,flame2_img:null,
 	raptor1_img:null,raptor2_img:null,
@@ -164,31 +163,15 @@ var Game={
 	al:null,
 	phase:0,	//0=menu
 	menu:{
-		buttons:[],
+		button:null,
 		init:function(){
-			var but={
+			this.button={
 				x:300,y:200,w:230,h:80,
-				img:start_img,
+				hover: false,
+				getImg: function() {
+					return this.hover ? Game.start_img_hover : Game.start_img;
+				},
 				
-				collide:collideGlobal
-			}
-			this.buttons.push(but);
-			but={
-				x:300,y:300,w:230,h:80,
-				img:instr_img,
-				
-				collide:collideGlobal
-			}
-			this.buttons.push(but);
-		}
-	},
-	instructions:{
-		back_button:null,
-		init:function(){
-			this.back_button={
-				x:300,y:500,w:230,h:80,
-				img:back_img,
-					
 				collide:collideGlobal
 			}
 		}
@@ -881,8 +864,7 @@ var Game={
 		this.canvas=document.getElementById("canvas");
 		this.title_img=document.getElementById("title_img");
 		this.start_img=document.getElementById("start_img");
-		this.instr_img=document.getElementById("instr_img");
-		this.back_img=document.getElementById("back_img");
+		this.start_img_hover=document.getElementById("start_img_hover");
 		this.tama_stand_img=document.getElementById("tama_stand_img");
 		this.tama_run_img=document.getElementById("tama_run_img");
 		this.tama_stand_hit_img=document.getElementById("tama_stand_hit_img");
@@ -904,11 +886,13 @@ var Game={
 		this.ctx=this.canvas.getContext("2d");
 		this.phase=0;
 		this.menu.init();
-		this.instructions.init();
 		var game=this;
 
 		$("#canvas").click(function(e){
 			game.al.clicked(e);
+		});
+		$("#canvas").addEventListener('mousemove', function(e){
+			game.al.moved(e);
 		});
 		window.addEventListener('keydown',function(e){
 			game.al.keydown(e);
@@ -919,33 +903,30 @@ var Game={
 	},
 	drawTitle:function(){
 		audioHandler.stopAll();
+		this.menu.button.hover = false;
 		this.ctx.drawImage(this.title_img,0,0);
-	},
-	drawMenu:function(){
-		for(var i=0;i<this.menu.buttons.length;i++){
-			var but=this.menu.buttons[i];
-			this.ctx.drawImage(but.img,but.x,but.y);
-		}
-	},
-	drawInstructions:function(){
-		var but=this.instructions.back_button;
-		this.ctx.drawImage(but.img,but.x,but.y);
-		
+
+		const instructionsOffset = 190;
+
 		this.ctx.fillStyle="#000000";
-		this.ctx.fillRect(185,100,450,380);
+		this.ctx.fillRect(185,100+instructionsOffset,450,270);
 		
 		this.ctx.fillStyle="#ffffff";
 		this.ctx.font="20px Verdana";
-		this.ctx.fillText("In game controls:",190,120);
-		this.ctx.fillText("WASD - movement",190,150);
-		this.ctx.fillText("H - slow down",190,180);
-		this.ctx.fillText("K - accelerate",190,210);
-		this.ctx.fillText("J - fire",190,240);
-		this.ctx.fillText("P - pause",190,270);
-		this.ctx.fillText("ESC - exit to title",190,300);
+		this.ctx.fillText("In game controls:",190,120+instructionsOffset);
+		this.ctx.fillText("WASD - movement",190,150+instructionsOffset);
+		this.ctx.fillText("H - slow down",190,180+instructionsOffset);
+		this.ctx.fillText("K - accelerate",190,210+instructionsOffset);
+		this.ctx.fillText("J - fire",190,240+instructionsOffset);
+		this.ctx.fillText("P - pause",190,270+instructionsOffset);
+		this.ctx.fillText("ESC - exit to title",190,300+instructionsOffset);
 		
-		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",190,360);
-	}
+		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",190,360+instructionsOffset);
+	},
+	drawMenu:function(){
+		var but = this.menu.button;
+		this.ctx.drawImage(but.getImg(), but.x, but.y);
+	},
 }
 
 var AL={	//AL - ActionListener
@@ -1094,29 +1075,15 @@ var AL={	//AL - ActionListener
 		this.game.phase = 2;	// 2=gameplay
 		this.game.gameplay.init(this.game);
 	},
-	listenButton:function(id){
-		if(id==1){	//instr_button
-			this.game.phase=1;	//1=instruction
-			this.game.drawTitle();
-			this.game.drawInstructions();
-		}
-		else if(id==0){	//play button
-			this.startGame();
-		}
-	},
 	listenBackButton:function(){
 		this.game.phase=0;	//0=menu
 		this.game.drawTitle();
 		this.game.drawMenu();
 	},
 	phaseMenu:function(e){
-		for(var i=0;i<this.game.menu.buttons.length;i++)
-			if(this.game.menu.buttons[i].collide(e))
-				this.listenButton(i);
-	},
-	phaseInstructions:function(e){
-		if(this.game.instructions.back_button.collide(e))
-			this.listenBackButton();
+		if (this.game.menu.button.collide(e)) {
+			this.startGame();
+		}
 	},
 	phaseGameplay:function(e){
 		this.gameListener.click(e);
@@ -1133,10 +1100,17 @@ var AL={	//AL - ActionListener
 	clicked:function(e){
 		if(this.game.phase==0)
 			this.phaseMenu(e);
-		else if(this.game.phase==1)
-			this.phaseInstructions(e);
 		else if(this.game.phase==2)
 			this.phaseGameplay(e);
+	},
+	moved: function(e) {
+		if(this.game.phase === 0) {
+			const oldHover = this.game.menu.button.hover;
+			this.game.menu.button.hover = this.game.menu.button.collide(e);
+			if (this.game.menu.button.hover !== oldHover) {
+				this.game.drawMenu();
+			}
+		}
 	},
 	keydown:function(e){
 		if(this.game.phase==2)
