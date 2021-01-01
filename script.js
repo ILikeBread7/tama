@@ -23,6 +23,8 @@ function collideGlobal(e){	//for buttons
 	return (e.pageX>=this.x && e.pageX<=this.x+this.w && e.pageY>=this.y && e.pageY<=this.y+this.h);
 }
 
+let titleInterval = null;
+
 const BGM_TRACK = 'Juhani Junkala [Retro Game Music Pack] Level 1.ogg';
 const EXPLOSION_TRACK = '8bit_bomb_explosion.ogg';
 const TAMA_DAMAGE_TRACK = '7.ogg';
@@ -152,7 +154,7 @@ const audioHandler = (() => {
 
 var Game={
 	canvas:null,ctx:null,
-	title_img:null,start_img:null,start_img_hover:null,
+	title_img:null,flame1_title_img:null,flame2_title_img:null,start_img:null,start_img_hover:null,
 	tama_stand_img:null,tama_run_img:null,tama_stand_hit_img:null,tama_run_hit_img:null,tama_flame_run:null,tama_flame_stand:null,
 	flame1_img:null,flame2_img:null,
 	raptor1_img:null,raptor2_img:null,
@@ -161,12 +163,13 @@ var Game={
 	stone_img:null,
 	laser_img:null,
 	al:null,
+	drawCycle: true,
 	phase:0,	//0=menu
 	menu:{
 		button:null,
 		init:function(){
 			this.button={
-				x:300,y:200,w:230,h:80,
+				x:300,y:180,w:230,h:80,
 				hover: false,
 				getImg: function() {
 					return this.hover ? Game.start_img_hover : Game.start_img;
@@ -785,14 +788,18 @@ var Game={
 				this.pause=true;
 		},
 		start:function(){
+			clearInterval(titleInterval);
 			var gameplay=this;
 			var interval=setInterval(function(){
 				if(gameplay.stop){
 					clearInterval(interval);
+					gameplay.game.menu.button.hover = false;
 					gameplay.game.al.gameListener.resetKeys();
 					gameplay.game.phase=0;	//0=menu
-					gameplay.game.drawTitle();
-					gameplay.game.drawMenu();
+					titleInterval = setInterval(() => {
+						gameplay.game.drawTitle();
+						gameplay.game.drawMenu();
+					}, 200);
 				}
 				else if(gameplay.pause) {
 					gameplay.drawPause();
@@ -857,12 +864,15 @@ var Game={
 			this.pause=false;
 			this.stop=false;
 			this.time=0;
+			this.drawCycle = true;
 			this.start();
 		}
 	},
 	init:function(){
 		this.canvas=document.getElementById("canvas");
 		this.title_img=document.getElementById("title_img");
+		this.flame1_title_img=document.getElementById("flame1_title_img");
+		this.flame2_title_img=document.getElementById("flame2_title_img");
 		this.start_img=document.getElementById("start_img");
 		this.start_img_hover=document.getElementById("start_img_hover");
 		this.tama_stand_img=document.getElementById("tama_stand_img");
@@ -903,15 +913,14 @@ var Game={
 	},
 	drawTitle:function(){
 		audioHandler.stopAll();
-		this.menu.button.hover = false;
 		this.ctx.drawImage(this.title_img,0,0);
 		$('#credits').show();
 
-		const instructionsOffset = 190;
-		const leftOffset = 300;
+		const instructionsOffset = 180;
+		const leftOffset = 5;
 
 		this.ctx.fillStyle="#000000";
-		this.ctx.fillRect(leftOffset,100+instructionsOffset,450,270);
+		this.ctx.fillRect(leftOffset,100+instructionsOffset,450,295);
 		
 		this.ctx.fillStyle="#ffffff";
 		this.ctx.font="20px Verdana";
@@ -923,7 +932,31 @@ var Game={
 		this.ctx.fillText("P - pause",leftOffset+5,270+instructionsOffset);
 		this.ctx.fillText("ESC - exit to title",leftOffset+5,300+instructionsOffset);
 		
-		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",leftOffset+5,360+instructionsOffset);
+		this.ctx.fillText("Every 10 kills you get a bonus!",leftOffset+5,355+instructionsOffset);
+		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",leftOffset+5,385+instructionsOffset);
+
+		this.ctx.fillStyle = "#fff";
+		this.ctx.strokeStyle = "#000";
+		const sign = {
+			text: 'I_LIKE_BREAD7 2015 - 2021',
+			x: 500,
+			y: 592
+		};
+		this.ctx.fillText(sign.text, sign.x, sign.y);
+		this.ctx.strokeText(sign.text, sign.x, sign.y);
+
+		this.ctx.drawImage(this.drawCycle ? this.flame1_title_img : this.flame2_title_img, 370, 90);
+		this.ctx.font = "64px Verdana";
+		this.ctx.fillStyle = "#f00";
+		this.ctx.strokeStyle = "#fff";
+		const dx = {
+			text: 'DX',
+			x: 370,
+			y: 150
+		};
+		this.ctx.fillText(dx.text, dx.x, dx.y);
+		this.ctx.strokeText(dx.text, dx.x, dx.y);
+		this.drawCycle = !this.drawCycle;
 	},
 	drawMenu:function(){
 		var but = this.menu.button;
@@ -1080,8 +1113,11 @@ var AL={	//AL - ActionListener
 	},
 	listenBackButton:function(){
 		this.game.phase=0;	//0=menu
-		this.game.drawTitle();
-		this.game.drawMenu();
+		this.game.menu.button.hover = false;
+		titleInterval = setInterval(() => {
+			this.game.drawTitle();
+			this.game.drawMenu();
+		}, 200);
 	},
 	phaseMenu:function(e){
 		if (this.game.menu.button.collide(e)) {
@@ -1142,6 +1178,8 @@ function init(){
 	AL.gameListener.game=Game;
 	Game.al=AL;
 	Game.init();
-	Game.drawTitle();
-	Game.drawMenu();
+	titleInterval = setInterval(() => {
+		Game.drawTitle();
+		Game.drawMenu();
+	}, 200);
 }
