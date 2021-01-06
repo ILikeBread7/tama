@@ -756,13 +756,12 @@ var Game={
 
 					var name;
 					if(e.scores[i].user){
-						ctx.fillStyle="#ffffff";
 						name=e.scores[i].user;
 					}
 					else{
 						name=e.scores[i].guest;
-						ctx.fillStyle="#ffff00";
 					}
+					ctx.fillStyle="#ffffff";
 					ctx.fillText((i+1+adjustForPlayerScore)+": "+name+" "+e.scores[i].sort,210,180+(i+adjustForPlayerScore)*30);
 				}
 
