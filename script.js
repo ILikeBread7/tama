@@ -699,13 +699,18 @@ var Game={
 			}
 		},
 		drawPause: function() {
+			const PAUSE_WIDTH = 200;
+			const PAUSE_HEIGHT = 100;
+			const PAUSE_X = (WIDTH - PAUSE_WIDTH) / 2;
+			const PAUSE_Y = (HEIGHT - PAUSE_HEIGHT) / 2;
+
 			this.game.ctx.fillStyle = '#000000';
-			this.game.ctx.fillRect(300, 250, 200, 100);
+			this.game.ctx.fillRect(PAUSE_X, PAUSE_Y, PAUSE_WIDTH, PAUSE_HEIGHT);
 			this.game.ctx.fillStyle = "#ffffff";
 			this.game.ctx.font = "20px Verdana";
-			this.game.ctx.fillText('Pause', 370, 280);
-			this.game.ctx.fillText('Press P to continue', 303, 305);
-			this.game.ctx.fillText('or ESC to exit', 330, 330);
+			this.game.ctx.fillText('Pause', PAUSE_X + 70, PAUSE_Y + 30);
+			this.game.ctx.fillText('Press P to continue', PAUSE_X + 3, PAUSE_Y + 55);
+			this.game.ctx.fillText('or ESC to exit', PAUSE_X + 30, PAUSE_Y + 80);
 		},
 		addBoom:function(x,down_y){
 			this.booms.add(x,down_y);
