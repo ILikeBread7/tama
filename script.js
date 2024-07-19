@@ -28,6 +28,9 @@ let titleInterval = null;
 const WIDTH = 1280;
 const HEIGHT = 720;
 
+const RAPTOR = 0;
+const TRICERATOPS = 1;
+
 const BGM_TRACK = 'Juhani Junkala [Retro Game Music Pack] Level 1.ogg';
 const EXPLOSION_TRACK = '8bit_bomb_explosion.ogg';
 const TAMA_DAMAGE_TRACK = '7.ogg';
@@ -231,7 +234,8 @@ var Game={
 			}
 		},
 		dinosaurs:{
-			sprites:[],
+			raptorSprites: [],
+			triceratopsSprites: [],
 			dinosaurs:[],
 			number:2,
 			max_number:8,
@@ -240,18 +244,24 @@ var Game={
 			all_on_screen:true,
 			
 			moveDinosaurs:function(game){
+				const LASERS_GAP = 10;
 				for(var i=0;i<this.dinosaurs.length;i++){
 					var dino=this.dinosaurs[i];
 					if(dino.x-game.gameplay.left_scroll<=WIDTH)
 						dino.x+=dino.speed;
 					dino.timer++;
 					if(dino.timer%this.laser_freq==0) {
-						game.gameplay.lasers.add(dino.x,dino.y+Math.floor(dino.h-game.gameplay.lasers.h)/2);
+						if (dino.type === RAPTOR) {
+							game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) /2 - LASERS_GAP, 0);
+							game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) /2 + LASERS_GAP, 0);
+						} else {
+							game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) /2, Math.atan2(dino.y - game.gameplay.tama.y, dino.x - game.gameplay.tama.x));
+						}
 						audioHandler.playEffect(LASER_TRACK);
 					}
 				}
 			},
-			newDino: function(game, single) {
+			newRaptor: function(game, single) {
 				var dinos = this;
 				return {
 					points:1,
@@ -260,13 +270,35 @@ var Game={
 					w:116,
 					h:60,
 					timer:0,
+					type: RAPTOR,
 					speed: single ? (Math.floor(Math.random()*2)+1) : (Math.floor(Math.random()*7)-2),
 					x: single ? (this.width+WIDTH+game.gameplay.left_scroll) : (Math.floor(Math.random()*this.width)+WIDTH+game.gameplay.left_scroll),
-					y:Math.floor(Math.random()*(430-60))+85,
+					y:Math.floor(Math.random() * (HEIGHT - 170 - 60)) + 85,
 					getSprite:function(){
-						return dinos.sprites[Math.floor(this.timer*Math.abs(this.speed)/20)%2];
+						return dinos.raptorSprites[Math.floor(this.timer * Math.abs(this.speed) / 20) % 2];
 					}
 				}
+			},
+			newTriceratops: function(game, single) {
+				var dinos = this;
+				return {
+					points: 3,
+					maxHp: 30,
+					hp: 30,
+					w: 95,
+					h: 148,
+					timer: 0,
+					type: TRICERATOPS,
+					speed: single ? (Math.floor(Math.random()) + 1) : (Math.floor(Math.random() * 3) - 2),
+					x: single ? (this.width + WIDTH + game.gameplay.left_scroll) : (Math.floor(Math.random() * this.width) + WIDTH + game.gameplay.left_scroll),
+					y: Math.floor(Math.random() * (HEIGHT - 170 - 95)) + 85,
+					getSprite: function() {
+						return dinos.triceratopsSprites[Math.floor(this.timer * Math.abs(this.speed) / 20) % 2];
+					}
+				}
+			},
+			newDino: function (game, single) {
+				return Math.random() < 0.15 ? this.newTriceratops(game, single) : this.newRaptor(game, single);
 			},
 			addSingleDino:function(game){
 				this.newDino(game, true);
@@ -285,9 +317,13 @@ var Game={
 			},
 			init:function(game){
 				this.dinosaurs=[];
-				if(this.sprites.length==0){
-					this.sprites.push(game.raptor1_img);
-					this.sprites.push(game.raptor2_img);
+				if (this.raptorSprites.length ===0) {
+					this.raptorSprites.push(game.raptor1_img);
+					this.raptorSprites.push(game.raptor2_img);
+				}
+				if (this.triceratopsSprites.length ===0) {
+					this.triceratopsSprites.push(game.triceratops1_img);
+					this.triceratopsSprites.push(game.triceratops2_img);
 				}
 				this.number=2;
 				this.width=2400;
@@ -454,15 +490,18 @@ var Game={
 			w:30,
 			h:10,
 			
-			add:function(laser_x,laser_y){
+			add: function(laser_x, laser_y, angle){
 				this.lasers.push({
-					x:laser_x,
-					y:laser_y
+					x: laser_x,
+					y: laser_y,
+					angle: angle
 				});
 			},
 			moveLasers:function(){
-				for(var i=0;i<this.lasers.length;i++)
-					this.lasers[i].x-=this.speed;
+				for (let i=0; i < this.lasers.length; i++) {
+					this.lasers[i].x -= this.speed * Math.cos(this.lasers[i].angle);
+					this.lasers[i].y -= this.speed * Math.sin(this.lasers[i].angle);
+				}
 			},
 			init:function(game){
 				this.lasers=[];
@@ -903,6 +942,8 @@ var Game={
 		this.flame2_img=document.getElementById("flame2_img");
 		this.raptor1_img=document.getElementById("raptor1_img");
 		this.raptor2_img=document.getElementById("raptor2_img");
+		this.triceratops1_img=document.getElementById("triceratops1_img");
+		this.triceratops2_img=document.getElementById("triceratops2_img");
 		this.explosion1_img=document.getElementById("explosion1_img");
 		this.explosion2_img=document.getElementById("explosion2_img");
 		this.laser_img=document.getElementById("laser_img");
