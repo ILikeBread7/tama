@@ -25,6 +25,9 @@ function collideGlobal(e){	//for buttons
 
 let titleInterval = null;
 
+const WIDTH = 1280;
+const HEIGHT = 720;
+
 const BGM_TRACK = 'Juhani Junkala [Retro Game Music Pack] Level 1.ogg';
 const EXPLOSION_TRACK = '8bit_bomb_explosion.ogg';
 const TAMA_DAMAGE_TRACK = '7.ogg';
@@ -203,12 +206,12 @@ var Game={
 					var rocks=this;
 					for(var i=0;i<this.number-1;i++){
 						this.rocks.push({
-							x:Math.floor(Math.random()*this.width)+800+game.gameplay.left_scroll,
+							x:Math.floor(Math.random()*this.width)+WIDTH+game.gameplay.left_scroll,
 							y:Math.floor(Math.random()*(430-rocks.wh))+85
 						});
 					}
 					this.rocks.push({
-						x:this.width+800+game.gameplay.left_scroll,
+						x:this.width+WIDTH+game.gameplay.left_scroll,
 						y:Math.floor(Math.random()*(430-rocks.wh))+85
 					});
 				}
@@ -239,7 +242,7 @@ var Game={
 			moveDinosaurs:function(game){
 				for(var i=0;i<this.dinosaurs.length;i++){
 					var dino=this.dinosaurs[i];
-					if(dino.x-game.gameplay.left_scroll<=800)
+					if(dino.x-game.gameplay.left_scroll<=WIDTH)
 						dino.x+=dino.speed;
 					dino.timer++;
 					if(dino.timer%this.laser_freq==0) {
@@ -258,7 +261,7 @@ var Game={
 					h:60,
 					timer:0,
 					speed: single ? (Math.floor(Math.random()*2)+1) : (Math.floor(Math.random()*7)-2),
-					x: single ? (this.width+800+game.gameplay.left_scroll) : (Math.floor(Math.random()*this.width)+800+game.gameplay.left_scroll),
+					x: single ? (this.width+WIDTH+game.gameplay.left_scroll) : (Math.floor(Math.random()*this.width)+WIDTH+game.gameplay.left_scroll),
 					y:Math.floor(Math.random()*(430-60))+85,
 					getSprite:function(){
 						return dinos.sprites[Math.floor(this.timer*Math.abs(this.speed)/20)%2];
@@ -414,8 +417,8 @@ var Game={
 				if(this.dots.length==0)
 					for(var i=0;i<60;i++)
 						this.dots.push({
-							x:Math.floor(Math.random()*820),
-							y:Math.floor(Math.random()*400)+100,
+							x:Math.floor(Math.random()*(WIDTH + 20)),
+							y:Math.floor(Math.random()*(HEIGHT - 200))+100,
 							r:10+Math.floor(Math.random()*7-3),
 							color:Math.floor(Math.random()*this.colors.length)
 						});
@@ -487,7 +490,7 @@ var Game={
 					this.timer++;
 					audioHandler.playLoopingEffect(SUPERMAN_FLYING_TRACK);
 				}
-				if (this.x > 800) {
+				if (this.x > WIDTH) {
 					this.reset();
 					return true;
 				}
@@ -535,7 +538,7 @@ var Game={
 			for(var i=0;i<this.dots.dots.length;i++){
 				var dot=this.dots.dots[i];
 				this.game.ctx.beginPath();
-				this.game.ctx.arc(820-(dot.x+this.left_scroll)%840,dot.y,dot.r,0,2*Math.PI);
+				this.game.ctx.arc((WIDTH + 20)-(dot.x+this.left_scroll)%(WIDTH + 40),dot.y,dot.r,0,2*Math.PI);
 				this.game.ctx.fillStyle=this.dots.colors[dot.color];
 				this.game.ctx.fill();
 				this.game.ctx.closePath();
@@ -545,7 +548,7 @@ var Game={
 			this.rocks.all_on_screen=true;
 			for(var i=0;i<this.rocks.rocks.length;i++){
 				var rock=this.rocks.rocks[i];
-				if(rock.x-this.left_scroll>=800)
+				if(rock.x-this.left_scroll>=WIDTH)
 					this.rocks.all_on_screen=false;
 				if(rock.x+this.rocks.wh-this.left_scroll<0){
 					this.rocks.rocks.splice(i,1);
@@ -574,13 +577,13 @@ var Game={
 			this.dinosaurs.all_on_screen=true;
 			for(var i=0;i<this.dinosaurs.dinosaurs.length;i++){
 				var dino=this.dinosaurs.dinosaurs[i];
-				if(dino.x-this.left_scroll>=800)
+				if(dino.x-this.left_scroll>=WIDTH)
 					this.dinosaurs.all_on_screen=false;
 				if(dino.x+dino.w-this.left_scroll<0){
 					this.dinosaurs.dinosaurs.splice(i,1);
 					i--;
 				}
-				if(dino.x>800+this.width){
+				if(dino.x>WIDTH+this.width){
 					dino.x-=this.width/2;
 					dino.speed--;
 				}
@@ -636,14 +639,19 @@ var Game={
 			return Math.floor(this.tama.x/100*(1+this.points)) + this.bonus;
 		},
 		drawBackground:function(){
+			// Top and bottom panels
 			this.game.ctx.fillStyle="#291eff";
-			this.game.ctx.fillRect(0,0,800,45);
-			this.game.ctx.fillRect(0,555,800,45);
+			this.game.ctx.fillRect(0,0,WIDTH,45);
+			this.game.ctx.fillRect(0,HEIGHT - 45,WIDTH,45);
+
+			// "Grass"
 			this.game.ctx.fillStyle="#3bc870";
-			this.game.ctx.fillRect(0,45,800,40);
-			this.game.ctx.fillRect(0,515,800,40);			
+			this.game.ctx.fillRect(0,45,WIDTH,40);
+			this.game.ctx.fillRect(0,HEIGHT - 85,WIDTH,40);		
+
+			// Ground
 			this.game.ctx.fillStyle="#c3c83b";
-			this.game.ctx.fillRect(0,85,800,430);
+			this.game.ctx.fillRect(0,85,WIDTH,HEIGHT - 170);
 			
 			this.game.ctx.fillStyle="#ffffff";
 			this.game.ctx.font="20px Verdana";
@@ -651,17 +659,17 @@ var Game={
 			this.game.ctx.fillText("Distance:",175,30);
 			this.game.ctx.fillText("Kills:",435,30);
 			this.game.ctx.fillText("Speed:",670,30);
-			this.game.ctx.fillText("Total score:",225,585);
+			this.game.ctx.fillText("Total score:",225, HEIGHT - 15);
 			
 			this.game.ctx.fillText(this.timeFormat(this.time),80,30);
 			this.game.ctx.fillText(Math.floor(this.tama.x/100),275,30);
 			this.game.ctx.fillText(this.points,490,30);
 			this.game.ctx.fillText(this.tama.speed,745,30);
-			this.game.ctx.fillText(this.calculateTotalScore(),345,585);
+			this.game.ctx.fillText(this.calculateTotalScore(),345, HEIGHT - 15);
 			
-			this.game.ctx.fillText("Fuel:",620,585);
+			this.game.ctx.fillText("Fuel:",620,HEIGHT - 15);
 			this.game.ctx.fillStyle="#000000";
-			this.game.ctx.fillRect(680,565,100,25);
+			this.game.ctx.fillRect(680,HEIGHT - 35,100,25);
 			
 			this.drawDots();
 		},
@@ -673,13 +681,13 @@ var Game={
 					img=this.game.heart_img;
 				else
 					img=this.game.heart_faint_img;
-				this.game.ctx.drawImage(img,50+i*40,558);
+				this.game.ctx.drawImage(img,50+i*40, HEIGHT - 42);
 			}
 		},
 		drawFuel:function(){
 			var fuel=Math.floor(this.game.gameplay.tama.fuel/9);
 			this.game.ctx.fillStyle="#12de32";
-			this.game.ctx.fillRect(680,565,fuel,25);
+			this.game.ctx.fillRect(680, HEIGHT- 35, fuel,25);
 		},
 		drawTama:function(){
 			this.game.ctx.drawImage(this.tama.getSprite(),this.tama.x-this.left_scroll,this.tama.y);
@@ -732,20 +740,25 @@ var Game={
 			var score=this.calculateTotalScore();
 			this.score=score;
 			this.game.ctx.fillStyle="#000000";
-			this.game.ctx.fillRect(200,100,420,430);
+
+			const SCORES_WIDTH = 420;
+			const SCORES_HEIGHT = 430;
+			const SCORES_X = (WIDTH - SCORES_WIDTH) / 2;
+			const SCORES_Y = (HEIGHT - SCORES_HEIGHT) / 2;
+			this.game.ctx.fillRect(SCORES_X, SCORES_Y, SCORES_WIDTH, SCORES_HEIGHT);
 			
 			this.game.ctx.fillStyle="#ffffff";
 			this.game.ctx.font="20px Verdana";
-			this.game.ctx.fillText("Your total score: "+score,210,120);
-			this.game.ctx.fillText("Top scores:",210,150);
-			this.game.ctx.fillText("Press ESC to exit or Enter to play again!",210,520);
+			this.game.ctx.fillText("Your total score: "+score, SCORES_X + 10, SCORES_Y + 20);
+			this.game.ctx.fillText("Top scores:", SCORES_X + 10, SCORES_Y + 50);
+			this.game.ctx.fillText("Press ESC to exit or Enter to play again!", SCORES_X + 10, SCORES_Y + 420);
 			var ctx=this.game.ctx;
 
 			const { highscores, currentScoreIndex } = this.updateHighscores(score);
 
 			for (let i = 0; i < highscores.length; i++) {
 				ctx.fillStyle = i === currentScoreIndex ? '#00ff00' : '#ffffff';
-				ctx.fillText(`${i < 10 ? '' : ' '}${i + 1}. ${highscores[i]}`, 210, 180 + i * 30);
+				ctx.fillText(`${i < 10 ? '' : ' '}${i + 1}. ${highscores[i]}`, SCORES_X + 10, SCORES_Y + 80 + i * 30);
 			}
 		},
 		showScores:function(){
@@ -1071,8 +1084,8 @@ var AL={	//AL - ActionListener
 				break;
 			}
 			return {
-				x: x >= 0 && x + w <= 800,
-				y: y >= 85 && y + h <= 515
+				x: x >= 0 && x + w <= WIDTH,
+				y: y >= 85 && y + h <= HEIGHT - 85
 			};
 		},
 		collides:function(tama,rocks,dinosaurs,lasers){
