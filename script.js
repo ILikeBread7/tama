@@ -740,45 +740,43 @@ var Game={
 			this.game.ctx.fillText("Top scores:",210,150);
 			this.game.ctx.fillText("Press ESC to exit or Enter to play again!",210,520);
 			var ctx=this.game.ctx;
-			var scoreOnLeaderBoard = false;
-			var adjustForPlayerScore = 0;
-			GJAPI.ScoreFetch(0, false, 10, function(e){
-				for(var i=0;i<e.scores.length&&i+adjustForPlayerScore<10;i++){
-					if (!scoreOnLeaderBoard && score > e.scores[i].sort) {
-						scoreOnLeaderBoard = true;
-						adjustForPlayerScore = 1;
-						ctx.fillStyle = "#00ff00";
-						ctx.fillText((i+1)+": [You!] "+score,210,180+i*30);
-						if (i + adjustForPlayerScore === 10) {
-							break;
-						}
-					}
 
-					var name;
-					if(e.scores[i].user){
-						name=e.scores[i].user;
-					}
-					else{
-						name=e.scores[i].guest;
-					}
-					ctx.fillStyle="#ffffff";
-					ctx.fillText((i+1+adjustForPlayerScore)+": "+name+" "+e.scores[i].sort,210,180+(i+adjustForPlayerScore)*30);
-				}
+			const { highscores, currentScoreIndex } = this.updateHighscores(score);
 
-				if(!GJAPI.ScoreAdd(0, score, score)){
-					$("#guest").show();
-					$("#guest_name").focus();
-				}
-			});
+			for (let i = 0; i < highscores.length; i++) {
+				ctx.fillStyle = i === currentScoreIndex ? '#00ff00' : '#ffffff';
+				ctx.fillText(`${i < 10 ? '' : ' '}${i + 1}. ${highscores[i]}`, 210, 180 + i * 30);
+			}
 		},
 		showScores:function(){
 			this.game.al.gameListener.resetKeys();
 			this.game.phase=3;
 			this.drawScores();
 		},
-		addGuestScore:function(){
-			$("#guest").hide();
-			GJAPI.ScoreAddGuest (0, this.score, this.score, $('#guest_name').val());
+		updateHighscores: function(score) {
+			const HIGHSCORES_STORAGE_ITEM = 'highscores';
+			const highscores = JSON.parse(localStorage.getItem(HIGHSCORES_STORAGE_ITEM)) || [];
+
+			let currentScoreIndex = -1;
+			if (highscores.length) {
+				for (let i = 0; i < highscores.length; i++) {
+					if (score > highscores[i]) {
+						highscores.splice(i, 0, score);
+						currentScoreIndex = i;
+						break;
+					}
+				}
+
+				if (highscores.length > 10) {
+					highscores.splice(10);
+				}
+			} else {
+				highscores.push(score);
+				currentScoreIndex = 0;
+			}
+
+			localStorage.setItem(HIGHSCORES_STORAGE_ITEM, JSON.stringify(highscores));
+			return { highscores, currentScoreIndex };
 		},
 		togglePause:function(){
 			if(this.pause)
@@ -1129,9 +1127,8 @@ var AL={	//AL - ActionListener
 	phaseScores:function(e){
 		if(e.keyCode==27){
 			this.gameListener.resetKeys();
-			$("#guest").hide();
 			this.listenBackButton();
-		} else if (e.keyCode === 13 && $('#guest').style.display === 'none') {
+		} else if (e.keyCode === 13) {
 			this.startGame();
 		}
 	},
@@ -1159,16 +1156,6 @@ var AL={	//AL - ActionListener
 	keyup:function(e){
 		if(this.game.phase==2)
 			this.gameListener.keyup(e);
-	}
-}
-
-function addGuestScore(){
-	Game.gameplay.addGuestScore();
-}
-
-function guestNameListener(event) {
-	if (event.keyCode === 13) {	// enter
-		addGuestScore();
 	}
 }
 
