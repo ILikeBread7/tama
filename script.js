@@ -520,7 +520,7 @@ var Game={
 			activate: function(points) {
 				if (points > this.pointsActivated) {
 					this.active = true;
-					this.pointsActivated = points;
+					this.pointsActivated = Math.floor(points / 10) * 10;
 				}
 			},
 			move: function() {
@@ -866,7 +866,7 @@ var Game={
 					gameplay.dinosaurs.moveDinosaurs(gameplay.game);
 					gameplay.lasers.moveLasers();
 					gameplay.checkDinosaurFlame();
-					if (gameplay.points % 10 === 0) {
+					if (gameplay.points >= gameplay.superman.pointsActivated + 10) {
 						gameplay.superman.activate(gameplay.points);
 					}
 					if (gameplay.superman.move()) {
@@ -1139,20 +1139,32 @@ var AL={	//AL - ActionListener
 				return false;
 			for(var i=0;i<rocks.rocks.length;i++){
 				var rock=rocks.rocks[i];
-				if(tama.x+tama.w>rock.x && tama.x<rock.x+rocks.wh && tama.y<rock.y+rocks.wh && tama.y+tama.h>rock.y)
+				if (this.singleCollission(tama, { x: rock.x, y: rock.y, w: rocks.wh, h: rocks.wh })) {
 					return true;
+				}
 			}
 			for(var i=0;i<dinosaurs.dinosaurs.length;i++){
 				var dino=dinosaurs.dinosaurs[i];
-				if(tama.x+tama.w>dino.x && tama.x<dino.x+dino.w && tama.y<dino.y+dino.h && tama.y+tama.h>dino.y)
+				if (this.singleCollission(tama, dino)) {
 					return true;
+				}
 			}
 			for(var i=0;i<lasers.lasers.length;i++){
 				var laser=lasers.lasers[i];
-				if(tama.x+tama.w>laser.x && tama.x<rock.x+lasers.w && tama.y<laser.y+lasers.h && tama.y+tama.h>laser.y)
+				if (this.singleCollission(tama, { x: laser.x, y: laser.y, w: lasers.w, h: lasers.w })) {
 					return true;
+				}
 			}
 			return false;
+		},
+		singleCollission: function(object1, object2) {
+			const LEEWAY = 10;
+			return (
+				object1.x + object1.w > object2.x + LEEWAY
+				&& object1.x < object2.x + object2.w - LEEWAY
+				&& object1.y < object2.y + object2.h - LEEWAY
+				&& object1.y + object1.h > object2.y + LEEWAY
+			);
 		},
 		tamaMove:function(directionX, directionY){
 			var isInBounds = this.inBounds(directionX, directionY);
