@@ -30,10 +30,13 @@ const HEIGHT = 720;
 
 const RAPTOR = 0;
 const TRICERATOPS = 1;
+const T_REX = 2;
 
 const TAMA_STANDARD_SPEED = 2;
 const TAMA_SLOWDOWN_SPEED = 1;
 const TAMA_SLOWDOWN_FUEL_MAX = 200;
+
+const T_REX_SPAWN_INTERVAL = 3;
 
 const BGM_TRACK = 'Juhani Junkala [Retro Game Music Pack] Level 1.ogg';
 const EXPLOSION_TRACK = '8bit_bomb_explosion.ogg';
@@ -198,6 +201,9 @@ var Game={
 		points:0,
 		bonus:0,
 		time:0,
+		level: 1,
+		lastTRexKilledPoints: 0,
+		tRexSpawned: false,
 		initialized:false,
 		rocks:{
 			sprite:null,
@@ -240,6 +246,7 @@ var Game={
 		dinosaurs:{
 			raptorSprites: [],
 			triceratopsSprites: [],
+			tRexSprites: [],
 			dinosaurs:[],
 			number:2,
 			max_number:8,
@@ -248,18 +255,40 @@ var Game={
 			all_on_screen:true,
 			
 			moveDinosaurs:function(game){
-				const LASERS_GAP = 10;
 				for(var i=0;i<this.dinosaurs.length;i++){
 					var dino=this.dinosaurs[i];
-					if(dino.x-game.gameplay.left_scroll<=WIDTH)
-						dino.x+=dino.speed;
+					if (dino.type === T_REX) {
+						const tRexX = dino.x - game.gameplay.left_scroll;
+						if (tRexX < WIDTH * 3 / 4) {
+							dino.speed = game.gameplay.tama.getSpeed() * 1.05;
+						} else if (tRexX + dino.w > WIDTH) {
+							dino.speed = game.gameplay.tama.getSpeed() * 0.95;
+						}
+						dino.x += dino.speed;
+					} else {
+						if (dino.x - game.gameplay.left_scroll <= WIDTH) {
+							dino.x+=dino.speed;
+						}
+					}
+
 					dino.timer++;
-					if(dino.timer%this.laser_freq==0) {
-						if (dino.type === RAPTOR) {
-							game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) /2 - LASERS_GAP, 0);
-							game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) /2 + LASERS_GAP, 0);
-						} else {
-							game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) /2, Math.atan2(dino.y - game.gameplay.tama.y, dino.x - game.gameplay.tama.x));
+					if (dino.timer % this.laser_freq === 0) {
+						const LASERS_GAP = 10;
+						switch (dino.type) {
+							case RAPTOR:
+								game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2 - LASERS_GAP, 0);
+								game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2 + LASERS_GAP, 0);
+							break;
+							case TRICERATOPS:
+								game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2, Math.atan2(dino.y - game.gameplay.tama.y, dino.x - game.gameplay.tama.x));
+							break;
+							case T_REX:
+								if (game.gameplay.level >= 1) {
+									const T_REX_EYE_LEVEL = 30;
+									game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2 - T_REX_EYE_LEVEL - LASERS_GAP, 0);
+									game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2 - T_REX_EYE_LEVEL + LASERS_GAP, 0);
+								}
+							break;
 						}
 						audioHandler.playEffect(LASER_TRACK);
 					}
@@ -301,6 +330,24 @@ var Game={
 					}
 				}
 			},
+			newTRex: function (game, level) {
+				var dinos = this;
+				return {
+					points: 10,
+					maxHp: 100 + 20 * level,
+					hp: 100 + 20 * level,
+					w: 149,
+					h: 121,
+					timer: 0,
+					type: T_REX,
+					speed: game.gameplay.tama.getSpeed(),
+					x: WIDTH + game.gameplay.left_scroll,
+					y: Math.floor(Math.random() * (HEIGHT - 170 - 95)) + 85,
+					getSprite: function() {
+						return dinos.tRexSprites[Math.floor(this.timer * Math.abs(this.speed) / 30) % 2];
+					}
+				}
+			},
 			newDino: function (game, single) {
 				return Math.random() < 0.15 ? this.newTriceratops(game, single) : this.newRaptor(game, single);
 			},
@@ -321,13 +368,17 @@ var Game={
 			},
 			init:function(game){
 				this.dinosaurs=[];
-				if (this.raptorSprites.length ===0) {
+				if (this.raptorSprites.length === 0) {
 					this.raptorSprites.push(game.raptor1_img);
 					this.raptorSprites.push(game.raptor2_img);
 				}
-				if (this.triceratopsSprites.length ===0) {
+				if (this.triceratopsSprites.length === 0) {
 					this.triceratopsSprites.push(game.triceratops1_img);
 					this.triceratopsSprites.push(game.triceratops2_img);
+				}
+				if (this.tRexSprites.length === 0) {
+					this.tRexSprites.push(game.tRex1_img);
+					this.tRexSprites.push(game.tRex2_img);
 				}
 				this.number=2;
 				this.width=2400;
@@ -714,11 +765,13 @@ var Game={
 			this.game.ctx.fillText("Distance:",175,30);
 			this.game.ctx.fillText("Kills:",435,30);
 			this.game.ctx.fillText("Total score:",225, HEIGHT - 15);
+			this.game.ctx.fillText('Level:', 670, 30);
 			
 			this.game.ctx.fillText(this.timeFormat(this.time),80,30);
 			this.game.ctx.fillText(Math.floor(this.tama.x/100),275,30);
 			this.game.ctx.fillText(this.points,490,30);
 			this.game.ctx.fillText(this.calculateTotalScore(),345, HEIGHT - 15);
+			this.game.ctx.fillText(this.level, 735, 30);
 			
 			this.drawDots();
 		},
@@ -798,6 +851,15 @@ var Game={
 							i--;
 							this.points+=dino.points;
 							this.addBoom(dino.x,dino.y+dino.h);
+							if (dino.type === T_REX) {
+								this.level++;
+								this.lastTRexKilledPoints = this.points;
+								this.tRexSpawned = false;
+							}
+							if (!this.tRexSpawned && this.points >= this.lastTRexKilledPoints + T_REX_SPAWN_INTERVAL) {
+								this.dinosaurs.dinosaurs.push(this.dinosaurs.newTRex(this.game, this.level));
+								this.tRexSpawned = true;
+							}
 						}
 					}
 				}
@@ -825,11 +887,11 @@ var Game={
 			this.game.ctx.fillText("Press ESC to exit or Enter to play again!", SCORES_X + 10, SCORES_Y + 420);
 			var ctx=this.game.ctx;
 
-			const { highscores, currentScoreIndex } = this.updateHighscores(score);
+			const { highscores, currentScoreIndex } = this.updateHighscores(score, this.level);
 
 			for (let i = 0; i < highscores.length; i++) {
 				ctx.fillStyle = i === currentScoreIndex ? '#00ff00' : '#ffffff';
-				ctx.fillText(`${i < 10 ? '' : ' '}${i + 1}. ${highscores[i]}`, SCORES_X + 10, SCORES_Y + 80 + i * 30);
+				ctx.fillText(`${i < 10 ? '' : ' '}${i + 1}. Level ${highscores[i].level}, Score: ${highscores[i].score}`, SCORES_X + 10, SCORES_Y + 80 + i * 30);
 			}
 		},
 		showScores:function(){
@@ -837,15 +899,15 @@ var Game={
 			this.game.phase=3;
 			this.drawScores();
 		},
-		updateHighscores: function(score) {
+		updateHighscores: function(score, level) {
 			const HIGHSCORES_STORAGE_ITEM = 'highscores';
 			const highscores = JSON.parse(localStorage.getItem(HIGHSCORES_STORAGE_ITEM)) || [];
 
 			let currentScoreIndex = -1;
 			if (highscores.length) {
 				for (let i = 0; i < highscores.length; i++) {
-					if (score > highscores[i]) {
-						highscores.splice(i, 0, score);
+					if (score > highscores[i].score) {
+						highscores.splice(i, 0, { score, level });
 						currentScoreIndex = i;
 						break;
 					}
@@ -855,7 +917,7 @@ var Game={
 					highscores.splice(10);
 				}
 			} else {
-				highscores.push(score);
+				highscores.push({ score, level });
 				currentScoreIndex = 0;
 			}
 
@@ -934,6 +996,9 @@ var Game={
 			this.left_scroll=0;
 			this.points=0;
 			this.bonus=0;
+			this.level = 1;
+			this.lastTRexKilledPoints = 0;
+			this.tRexSpawned = false;
 			this.tama.init(game);
 			this.rocks.init(game);
 			this.lasers.init(game);
@@ -970,8 +1035,10 @@ var Game={
 		this.flame2_img=document.getElementById("flame2_img");
 		this.raptor1_img=document.getElementById("raptor1_img");
 		this.raptor2_img=document.getElementById("raptor2_img");
-		this.triceratops1_img=document.getElementById("triceratops1_img");
-		this.triceratops2_img=document.getElementById("triceratops2_img");
+		this.triceratops1_img = document.getElementById("triceratops1_img");
+		this.triceratops2_img = document.getElementById("triceratops2_img");
+		this.tRex1_img = document.getElementById("tRex1_img");
+		this.tRex2_img = document.getElementById("tRex2_img");
 		this.explosion1_img=document.getElementById("explosion1_img");
 		this.explosion2_img=document.getElementById("explosion2_img");
 		this.laser_img=document.getElementById("laser_img");
