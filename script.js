@@ -32,7 +32,7 @@ const RAPTOR = 0;
 const TRICERATOPS = 1;
 const T_REX = 2;
 
-const TAMA_STANDARD_SPEED = 2;
+const TAMA_STANDARD_SPEED = 2.75;
 const TAMA_SLOWDOWN_SPEED = 1;
 const TAMA_SLOWDOWN_FUEL_MAX = 200;
 
