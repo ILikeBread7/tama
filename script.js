@@ -31,6 +31,10 @@ const HEIGHT = 720;
 const RAPTOR = 0;
 const TRICERATOPS = 1;
 
+const TAMA_STANDARD_SPEED = 2;
+const TAMA_SLOWDOWN_SPEED = 1;
+const TAMA_SLOWDOWN_FUEL_MAX = 200;
+
 const BGM_TRACK = 'Juhani Junkala [Retro Game Music Pack] Level 1.ogg';
 const EXPLOSION_TRACK = '8bit_bomb_explosion.ogg';
 const TAMA_DAMAGE_TRACK = '7.ogg';
@@ -336,20 +340,20 @@ var Game={
 			flame_sprites:[],
 			hp:3,
 			x:0,y:0,w:64,h:64,
-			speed:1,
+			speed:TAMA_STANDARD_SPEED,
 			speed_multiplier:4,
 			movement_speed:5,
 			timer:0,
 			recovery_time:120,
 			hit_time:-this.recovery_time,
 			fuel:900,
+			slowdownFuel: TAMA_SLOWDOWN_FUEL_MAX,
+			slowdown: false,
 			shooting:false,
 			directionX: 0,	//0=nothing, 1=left, 2=right
 			directionY: 0,	//0=nothing, 3=up, 4=down
-			acc:0,	//acceleration 0=nothing, -1=decrease, 1=increase
 			
 			hit:function(){
-				this.speed=1;
 				this.hit_time=this.timer;
 				this.hp--;
 				audioHandler.playEffect(TAMA_DAMAGE_TRACK);
@@ -391,20 +395,31 @@ var Game={
 			resetTemps:function(){
 				this.directionX = 0;
 				this.directionY = 0;
-				this.acc=0;
-			},
-			accelerate:function(){
-				var new_speed=this.speed+this.acc;
-				if(new_speed>=1 && new_speed<=4)
-					this.speed=new_speed;
 			},
 			move:function(gameListener){
 				this.x+=this.getSpeed();
 				gameListener.tamaMove(this.directionX, this.directionY);
 				this.shoot();
-				this.accelerate();
 				this.resetTemps();
 				this.timer++;
+				if (this.slowdown) {
+					this.slowdownFuel = Math.max(this.slowdownFuel - 1, 0);
+				} else {
+					this.slowdownFuel = Math.min(this.slowdownFuel + 1, TAMA_SLOWDOWN_FUEL_MAX);
+				}
+				if (this.slowdownFuel <= 0) {
+					this.deactivateSlowdown();
+				}
+			},
+			activateSlowdown: function() {
+				if (this.slowdownFuel >= TAMA_SLOWDOWN_FUEL_MAX) {
+					this.slowdown = true;
+					this.speed = TAMA_SLOWDOWN_SPEED;
+				}
+			},
+			deactivateSlowdown: function() {
+				this.slowdown = false;
+				this.speed = TAMA_STANDARD_SPEED;
 			},
 			moveDirection:function(directionX, directionY){
 				if(directionX === 1)
@@ -420,16 +435,17 @@ var Game={
 			init:function(game){
 				this.x=0;
 				this.y=300-this.h/2;
-				this.speed=1;
+				this.speed = TAMA_STANDARD_SPEED;
 				this.speed_multiplier=4;
 				this.movement_speed=5;
 				this.timer=0;
 				this.direction=0;
-				this.acc=0;
 				this.hp=3;
 				this.recovery_time=120;
 				this.hit_time=-this.recovery_time;
 				this.fuel=900;
+				this.slowdownFuel = TAMA_SLOWDOWN_FUEL_MAX,
+				this.slowdown = false,
 				this.shooting=false;
 				if(this.sprites.length==0){
 					this.sprites.push(game.tama_stand_img);
@@ -697,18 +713,12 @@ var Game={
 			this.game.ctx.fillText("Time:",15,30);
 			this.game.ctx.fillText("Distance:",175,30);
 			this.game.ctx.fillText("Kills:",435,30);
-			this.game.ctx.fillText("Speed:",670,30);
 			this.game.ctx.fillText("Total score:",225, HEIGHT - 15);
 			
 			this.game.ctx.fillText(this.timeFormat(this.time),80,30);
 			this.game.ctx.fillText(Math.floor(this.tama.x/100),275,30);
 			this.game.ctx.fillText(this.points,490,30);
-			this.game.ctx.fillText(this.tama.speed,745,30);
 			this.game.ctx.fillText(this.calculateTotalScore(),345, HEIGHT - 15);
-			
-			this.game.ctx.fillText("Fuel:",620,HEIGHT - 15);
-			this.game.ctx.fillStyle="#000000";
-			this.game.ctx.fillRect(680,HEIGHT - 35,100,25);
 			
 			this.drawDots();
 		},
@@ -724,9 +734,26 @@ var Game={
 			}
 		},
 		drawFuel:function(){
+			this.game.ctx.fillStyle="#fff";
+			this.game.ctx.fillText("Fuel:",620,HEIGHT - 15);
+			this.game.ctx.fillStyle="#000";
+			this.game.ctx.fillRect(680,HEIGHT - 35,100,25);
+
 			var fuel=Math.floor(this.game.gameplay.tama.fuel/9);
 			this.game.ctx.fillStyle="#12de32";
 			this.game.ctx.fillRect(680, HEIGHT- 35, fuel,25);
+		},
+		drawSlowdownfuel:function(){
+			const DRAW_X = 940;
+
+			this.game.ctx.fillStyle= '#fff';
+			this.game.ctx.fillText('Slowdown:', 820, HEIGHT - 15);
+			this.game.ctx.fillStyle= '#000';
+			this.game.ctx.fillRect(DRAW_X, HEIGHT - 35, 100, 25);
+
+			const fuel = Math.floor(this.game.gameplay.tama.slowdownFuel * 100 / TAMA_SLOWDOWN_FUEL_MAX);
+			this.game.ctx.fillStyle = '#de1232';
+			this.game.ctx.fillRect(DRAW_X, HEIGHT - 35, fuel, 25);
 		},
 		drawTama:function(){
 			this.game.ctx.drawImage(this.tama.getSprite(),this.tama.x-this.left_scroll,this.tama.y);
@@ -878,6 +905,7 @@ var Game={
 					gameplay.drawBackground();
 					gameplay.drawHearts();
 					gameplay.drawFuel();
+					gameplay.drawSlowdownfuel();
 					gameplay.drawRocks();
 					gameplay.drawDinosaurs();
 					gameplay.rocks.addRocks(gameplay.game);
@@ -980,13 +1008,13 @@ var Game={
 		
 		this.ctx.fillStyle="#ffffff";
 		this.ctx.font="20px Verdana";
+
 		this.ctx.fillText("In game controls:",leftOffset+5,120+instructionsOffset);
 		this.ctx.fillText("WASD - movement",leftOffset+5,150+instructionsOffset);
 		this.ctx.fillText("H - slow down",leftOffset+5,180+instructionsOffset);
-		this.ctx.fillText("K - accelerate",leftOffset+5,210+instructionsOffset);
-		this.ctx.fillText("J - fire",leftOffset+5,240+instructionsOffset);
-		this.ctx.fillText("P - pause",leftOffset+5,270+instructionsOffset);
-		this.ctx.fillText("ESC - exit to title",leftOffset+5,300+instructionsOffset);
+		this.ctx.fillText("J - fire",leftOffset+5,210+instructionsOffset);
+		this.ctx.fillText("P - pause",leftOffset+5,240+instructionsOffset);
+		this.ctx.fillText("ESC - exit to title",leftOffset+5,270+instructionsOffset);
 		
 		this.ctx.fillText("Every 10 kills you get a bonus!",leftOffset+5,355+instructionsOffset);
 		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",leftOffset+5,385+instructionsOffset);
@@ -1064,14 +1092,11 @@ var AL={	//AL - ActionListener
 				
 				case 72:
 					this.keys[4]=true;
-					this.game.gameplay.tama.acc=-1;
+					this.game.gameplay.tama.activateSlowdown();
 				break;
 				case 74:
 					this.keys[5]=true;
 				break;
-				case 75:
-					this.keys[6]=true;
-					this.game.gameplay.tama.acc=1;
 				break;
 				case 80:
 					this.game.gameplay.togglePause();
