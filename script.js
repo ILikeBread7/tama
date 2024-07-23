@@ -32,9 +32,16 @@ const RAPTOR = 0;
 const TRICERATOPS = 1;
 const T_REX = 2;
 
+const POWERUP_FLAME = 0;
+const POWERUP_HEART = 1;
+
 const TAMA_STANDARD_SPEED = 2.75;
 const TAMA_SLOWDOWN_SPEED = 1;
 const TAMA_SLOWDOWN_FUEL_MAX = 200;
+const TAMA_MAX_HP = 3;
+const TAMA_FLAME_UPGRADE = 0.25;
+const TAMA_FLAME_W = 128;
+const TAMA_FLAME_H = 64;
 
 const T_REX_SPAWN_INTERVAL = 3;
 
@@ -202,6 +209,7 @@ var Game={
 		bonus:0,
 		time:0,
 		level: 1,
+		powerupLevel: 0,
 		lastTRexKilledPoints: 0,
 		tRexSpawned: false,
 		initialized:false,
@@ -241,6 +249,62 @@ var Game={
 				this.addRocks(game);
 				audioHandler.init();
 				audioHandler.playBgm(BGM_TRACK);
+			}
+		},
+		powerups: {
+			game: null,
+			powerups: [],
+			flameSprite: null,
+			heartSprite: null,
+			flameW: 50,
+			flameH: 50,
+			heartW: 39,
+			heartH: 39,
+
+			init: function(game) {
+				this.game = game;
+				this.powerups = [];
+				this.flameSprite = game.flame_powerup_img;
+				this.heartSprite = game.heart_img;
+			},
+
+			addFlamePowerup: function(x, y) {
+				const that = this;
+				this.powerups.push({
+					w: that.flameW,
+					h: that.flameH,
+					x: x,
+					y: y,
+
+					getSprite: function() {
+						return that.flameSprite;
+					},
+					doEffect: function() {
+						that.game.gameplay.powerupLevel = Math.min(that.game.gameplay.powerupLevel + 1, 8);
+					}
+				});
+			},
+
+			addHeart: function(x, y) {
+				const that = this;
+				this.powerups.push({
+					w: that.heartW,
+					h: that.heartH,
+					x: x,
+					y: y,
+
+					getSprite: function() {
+						return that.heartSprite;
+					},
+					doEffect: function() {
+						that.game.gameplay.tama.hp = Math.min(that.game.gameplay.tama.hp + 1, TAMA_MAX_HP);
+					}
+				});
+			},
+
+			getPositionFromDino: function(dino, type) {
+				const { w, h } = type === POWERUP_FLAME ? { w: this.flameW, h: this.flameH } : { w: this.heartW, h: this.heartH };
+				return { x : Math.floor(dino.x + (dino.w - w) / 2), y: Math.floor(dino.y + (dino.h - h) / 2) };
 			}
 		},
 		dinosaurs:{
@@ -389,7 +453,7 @@ var Game={
 		tama:{
 			sprites:[],
 			flame_sprites:[],
-			hp:3,
+			hp: TAMA_MAX_HP,
 			x:0,y:0,w:64,h:64,
 			speed:TAMA_STANDARD_SPEED,
 			speed_multiplier:4,
@@ -491,7 +555,7 @@ var Game={
 				this.movement_speed=5;
 				this.timer=0;
 				this.direction=0;
-				this.hp=3;
+				this.hp = TAMA_MAX_HP;
 				this.recovery_time=120;
 				this.hit_time=-this.recovery_time;
 				this.fuel=900;
@@ -663,6 +727,16 @@ var Game={
 				this.game.ctx.drawImage(this.rocks.sprite,rock.x-this.left_scroll,rock.y);
 			}
 		},
+		drawPowerups: function() {
+			for (let i = 0; i < this.powerups.powerups.length; i++) {
+				const powerup = this.powerups.powerups[i];
+				if (powerup.x + powerup.w - this.left_scroll < 0) {
+					this.powerups.powerups.splice(i, 1);
+					i--;
+				}
+				this.game.ctx.drawImage(powerup.getSprite(), powerup.x - this.left_scroll, powerup.y);
+			}
+		},
 		drawDinoLifeBar: function(hp, maxHp, dinoX, dinoY) {
 			if (hp < maxHp) {
 				var borderWidth = 4;
@@ -777,7 +851,7 @@ var Game={
 		},
 		drawHearts:function(){
 			var hearts=this.game.gameplay.tama.hp;
-			for(var i=0;i<3;i++){
+			for (let i = 0; i < TAMA_MAX_HP; i++){
 				var img;
 				if(hearts>i)
 					img=this.game.heart_img;
@@ -785,6 +859,13 @@ var Game={
 					img=this.game.heart_faint_img;
 				this.game.ctx.drawImage(img,50+i*40, HEIGHT - 42);
 			}
+		},
+		drawPickedFlamePowerups: function() {
+			const powerups = this.game.gameplay.powerupLevel;
+			const img = this.powerups.flameSprite;
+			for (let i = 0; i < powerups; i++) {
+				this.game.ctx.drawImage(img, 1050 + i * 30, HEIGHT - 60);
+			}	
 		},
 		drawFuel:function(){
 			this.game.ctx.fillStyle="#fff";
@@ -811,7 +892,12 @@ var Game={
 		drawTama:function(){
 			this.game.ctx.drawImage(this.tama.getSprite(),this.tama.x-this.left_scroll,this.tama.y);
 			if(this.tama.shooting) {
-				this.game.ctx.drawImage(this.tama.getFlameSprite(),this.tama.x+this.tama.w-this.left_scroll,this.tama.y);
+				this.game.ctx.drawImage(
+					this.tama.getFlameSprite(),
+					this.tama.x + this.tama.w - this.left_scroll, this.tama.y,
+					TAMA_FLAME_W * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE),
+					TAMA_FLAME_H
+				);
 				audioHandler.playLoopingEffect(FIRE_TRACK);
 			} else {
 				audioHandler.stopLoopingEffect(FIRE_TRACK);
@@ -841,8 +927,8 @@ var Game={
 					var dino=this.dinosaurs.dinosaurs[i];
 					var flame_x=this.tama.x+this.tama.w;
 					var flame_y=this.tama.y;
-					var flame_w=128;
-					var flame_h=64;
+					var flame_w = TAMA_FLAME_W * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE);
+					var flame_h = TAMA_FLAME_H;
 					if(dino.x<flame_x+flame_w && dino.x+dino.w>flame_x && dino.y+dino.h>flame_y && dino.y<flame_y+flame_h){
 						isHit = true;
 						dino.hp--;
@@ -851,11 +937,18 @@ var Game={
 							i--;
 							this.points+=dino.points;
 							this.addBoom(dino.x,dino.y+dino.h);
+
 							if (dino.type === T_REX) {
 								this.level++;
 								this.lastTRexKilledPoints = this.points;
 								this.tRexSpawned = false;
+								const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_HEART);
+								this.powerups.addHeart(x, y);
+							} else if (Math.random() < 0.1) {
+								const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_FLAME);
+								this.powerups.addFlamePowerup(x, y);
 							}
+
 							if (!this.tRexSpawned && this.points >= this.lastTRexKilledPoints + T_REX_SPAWN_INTERVAL) {
 								this.dinosaurs.dinosaurs.push(this.dinosaurs.newTRex(this.game, this.level));
 								this.tRexSpawned = true;
@@ -968,12 +1061,14 @@ var Game={
 					gameplay.drawHearts();
 					gameplay.drawFuel();
 					gameplay.drawSlowdownfuel();
+					gameplay.drawPickedFlamePowerups();
 					gameplay.drawRocks();
 					gameplay.drawDinosaurs();
 					gameplay.rocks.addRocks(gameplay.game);
 					gameplay.dinosaurs.addDinosaurs(gameplay.game);
 					gameplay.drawTama();
 					gameplay.drawBooms();
+					gameplay.drawPowerups();
 					gameplay.drawLasers();
 					gameplay.drawSuperman();
 					gameplay.drawSupermanPoints();
@@ -997,10 +1092,12 @@ var Game={
 			this.points=0;
 			this.bonus=0;
 			this.level = 1;
+			this.powerupLevel = 0;
 			this.lastTRexKilledPoints = 0;
 			this.tRexSpawned = false;
 			this.tama.init(game);
 			this.rocks.init(game);
+			this.powerups.init(game);
 			this.lasers.init(game);
 			this.dinosaurs.init(game);
 			this.booms.init(game);
@@ -1039,6 +1136,7 @@ var Game={
 		this.triceratops2_img = document.getElementById("triceratops2_img");
 		this.tRex1_img = document.getElementById("tRex1_img");
 		this.tRex2_img = document.getElementById("tRex2_img");
+		this.flame_powerup_img = document.getElementById("powerup_img");
 		this.explosion1_img=document.getElementById("explosion1_img");
 		this.explosion2_img=document.getElementById("explosion2_img");
 		this.laser_img=document.getElementById("laser_img");
@@ -1226,7 +1324,7 @@ var AL={	//AL - ActionListener
 				y: y >= 85 && y + h <= HEIGHT - 85
 			};
 		},
-		collides:function(tama,rocks,dinosaurs,lasers){
+		collides: function(tama, rocks, dinosaurs,lasers, powerups){
 			if(tama.isHit())
 				return false;
 			for(var i=0;i<rocks.rocks.length;i++){
@@ -1247,6 +1345,16 @@ var AL={	//AL - ActionListener
 					return true;
 				}
 			}
+
+			for(let i = 0; i < powerups.powerups.length; i++) {
+				const powerup = powerups.powerups[i];
+				if (this.singleCollission(tama, powerup)) {
+					powerup.doEffect();
+					powerups.powerups.splice(i, 1);
+					i--;
+				}
+			}
+
 			return false;
 		},
 		singleCollission: function(object1, object2) {
@@ -1262,7 +1370,7 @@ var AL={	//AL - ActionListener
 			var isInBounds = this.inBounds(directionX, directionY);
 			if(isInBounds.x || isInBounds.y)
 				this.game.gameplay.tama.moveDirection(isInBounds.x ? directionX : 0, isInBounds.y ? directionY : 0);
-			if(this.collides(this.game.gameplay.tama,this.game.gameplay.rocks,this.game.gameplay.dinosaurs,this.game.gameplay.lasers))
+			if(this.collides(this.game.gameplay.tama,this.game.gameplay.rocks,this.game.gameplay.dinosaurs,this.game.gameplay.lasers, this.game.gameplay.powerups))
 				this.game.gameplay.tama.hit();
 		}
 	},
