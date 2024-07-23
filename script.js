@@ -704,6 +704,27 @@ var Game={
 				this.active = false;
 			}
 		},
+		levelUpMessage: {
+			active: false,
+			maxTimer: 60 * 3,
+			timer: 0,
+			x: 600,
+			y: 72,
+
+			update: function() {
+				if (this.active) {
+					this.timer++;
+				}
+				if (this.timer >= this.maxTimer) {
+					this.reset();
+				}
+			},
+
+			reset: function() {
+				this.timer = 0;
+				this.active = false;
+			}
+		},
 		drawDots:function(){
 			for(var i=0;i<this.dots.dots.length;i++){
 				var dot=this.dots.dots[i];
@@ -805,6 +826,18 @@ var Game={
 				this.game.ctx.strokeStyle = '#ff0000';
 				this.game.ctx.fillText(this.superman.getPoints(), 720, this.superman.y + 30);
 				this.game.ctx.strokeText(this.superman.getPoints(), 720, this.superman.y + 30);
+			}
+		},
+		drawLevelUpMessage: function() {
+			if (this.levelUpMessage.active && (Math.floor(this.levelUpMessage.timer / 20) % 2)) {
+				this.game.ctx.fillStyle = '#000';
+				this.game.ctx.fillRect(this.levelUpMessage.x - 30, this.levelUpMessage.y - 25, 150, 35);
+				this.game.ctx.font = '24px Verdana';
+				this.game.ctx.fillStyle = '#ffffff';
+				this.game.ctx.strokeStyle = '#ff0000';
+				const message = `Level ${this.game.gameplay.level}!!!`;
+				this.game.ctx.fillText(message, this.levelUpMessage.x, this.levelUpMessage.y);
+				this.game.ctx.strokeText(message, this.levelUpMessage.x, this.levelUpMessage.y);
 			}
 		},
 		timeFormat:function(time){
@@ -940,6 +973,7 @@ var Game={
 
 							if (dino.type === T_REX) {
 								this.level++;
+								this.levelUpMessage.active = true;
 								this.lastTRexKilledPoints = this.points;
 								this.tRexSpawned = false;
 								const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_HEART);
@@ -1057,6 +1091,7 @@ var Game={
 						audioHandler.playEffect(SUPERMAN_POINTS_TRACK);
 					}
 					gameplay.supermanPoints.move();
+					gameplay.levelUpMessage.update();
 					gameplay.drawBackground();
 					gameplay.drawHearts();
 					gameplay.drawFuel();
@@ -1072,6 +1107,7 @@ var Game={
 					gameplay.drawLasers();
 					gameplay.drawSuperman();
 					gameplay.drawSupermanPoints();
+					gameplay.drawLevelUpMessage();
 					gameplay.time++;
 					if(gameplay.time%(60*20)==0)
 						gameplay.rocks.increaseRockNumber();
