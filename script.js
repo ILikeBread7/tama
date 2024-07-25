@@ -27,6 +27,7 @@ let titleInterval = null;
 
 const WIDTH = 1280;
 const HEIGHT = 720;
+const GROUND_OFFSET = 85;
 
 const RAPTOR = 0;
 const TRICERATOPS = 1;
@@ -44,6 +45,8 @@ const TAMA_FLAME_W = 128;
 const TAMA_FLAME_H = 64;
 
 const T_REX_SPAWN_INTERVAL = 3;
+const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
+const DINOS_UP_DOWN_MOVEMENT_LEVEL = 1;
 
 const BGM_TRACK = 'Juhani Junkala [Retro Game Music Pack] Level 1.ogg';
 const EXPLOSION_TRACK = '8bit_bomb_explosion.ogg';
@@ -228,12 +231,12 @@ var Game={
 					for(var i=0;i<this.number-1;i++){
 						this.rocks.push({
 							x:Math.floor(Math.random()*this.width)+WIDTH+game.gameplay.left_scroll,
-							y:Math.floor(Math.random()*(430-rocks.wh))+85
+							y:Math.floor(Math.random()*(430-rocks.wh))+GROUND_OFFSET
 						});
 					}
 					this.rocks.push({
 						x:this.width+WIDTH+game.gameplay.left_scroll,
-						y:Math.floor(Math.random()*(430-rocks.wh))+85
+						y:Math.floor(Math.random()*(430-rocks.wh))+GROUND_OFFSET
 					});
 				}
 			},
@@ -335,6 +338,14 @@ var Game={
 						}
 					}
 
+					if (dino.speedY) {
+						const maxY = HEIGHT - GROUND_OFFSET - dino.h;
+						dino.y = Math.min(Math.max(dino.y + dino.speedY, GROUND_OFFSET), maxY);
+						if (dino.y <= GROUND_OFFSET || dino.y >= maxY) {
+							dino.speedY = -dino.speedY;
+						}
+					}
+
 					dino.timer++;
 					if (dino.timer % this.laser_freq === 0) {
 						const LASERS_GAP = 10;
@@ -358,7 +369,7 @@ var Game={
 					}
 				}
 			},
-			newRaptor: function(game, single) {
+			newRaptor: function(game, single, level) {
 				var dinos = this;
 				return {
 					points:1,
@@ -369,14 +380,15 @@ var Game={
 					timer:0,
 					type: RAPTOR,
 					speed: single ? (Math.floor(Math.random()*2)+1) : (Math.floor(Math.random()*7)-2),
+					speedY: level >= T_REX_UP_DOWN_MOVEMENT_LEVEL ? (Math.floor(Math.random() * 10) - 5) : 0,
 					x: single ? (this.width+WIDTH+game.gameplay.left_scroll) : (Math.floor(Math.random()*this.width)+WIDTH+game.gameplay.left_scroll),
-					y:Math.floor(Math.random() * (HEIGHT - 170 - 60)) + 85,
+					y:Math.floor(Math.random() * (HEIGHT - 170 - 60)) + GROUND_OFFSET,
 					getSprite:function(){
-						return dinos.raptorSprites[Math.floor(this.timer * Math.abs(this.speed) / 20) % 2];
+						return dinos.raptorSprites[Math.floor(this.timer * (Math.abs(this.speed) + Math.abs(this.speedY)) / 40) % 2];
 					}
 				}
 			},
-			newTriceratops: function(game, single) {
+			newTriceratops: function(game, single, level) {
 				var dinos = this;
 				return {
 					points: 3,
@@ -387,10 +399,11 @@ var Game={
 					timer: 0,
 					type: TRICERATOPS,
 					speed: single ? (Math.floor(Math.random()) + 1) : (Math.floor(Math.random() * 3) - 2),
+					speedY: level >= T_REX_UP_DOWN_MOVEMENT_LEVEL ? (Math.floor(Math.random() * 10) - 5) : 0,
 					x: single ? (this.width + WIDTH + game.gameplay.left_scroll) : (Math.floor(Math.random() * this.width) + WIDTH + game.gameplay.left_scroll),
-					y: Math.floor(Math.random() * (HEIGHT - 170 - 95)) + 85,
+					y: Math.floor(Math.random() * (HEIGHT - 170 - 95)) + GROUND_OFFSET,
 					getSprite: function() {
-						return dinos.triceratopsSprites[Math.floor(this.timer * Math.abs(this.speed) / 20) % 2];
+						return dinos.triceratopsSprites[Math.floor(this.timer * (Math.abs(this.speed) + Math.abs(this.speedY)) / 40) % 2];
 					}
 				}
 			},
@@ -405,25 +418,26 @@ var Game={
 					timer: 0,
 					type: T_REX,
 					speed: game.gameplay.tama.getSpeed(),
+					speedY: level >= T_REX_UP_DOWN_MOVEMENT_LEVEL ? (Math.floor(Math.random() * 10) - 5) : 0,
 					x: WIDTH + game.gameplay.left_scroll,
-					y: Math.floor(Math.random() * (HEIGHT - 170 - 95)) + 85,
+					y: Math.floor(Math.random() * (HEIGHT - 170 - 95)) + GROUND_OFFSET,
 					getSprite: function() {
-						return dinos.tRexSprites[Math.floor(this.timer * Math.abs(this.speed) / 30) % 2];
+						return dinos.tRexSprites[Math.floor(this.timer * (Math.abs(this.speed) + Math.abs(this.speedY)) / 30) % 2];
 					}
 				}
 			},
-			newDino: function (game, single) {
-				return Math.random() < 0.15 ? this.newTriceratops(game, single) : this.newRaptor(game, single);
+			newDino: function (game, single, level) {
+				return Math.random() < 0.15 ? this.newTriceratops(game, single, level) : this.newRaptor(game, single, level);
 			},
-			addSingleDino:function(game){
-				this.newDino(game, true);
+			addSingleDino:function(game, level){
+				this.newDino(game, true, level);
 			},
 			addDinosaurs:function(game){
 				if(this.all_on_screen){
 					for(var i=0;i<this.number-1;i++){
-						this.dinosaurs.push(this.newDino(game, false));
+						this.dinosaurs.push(this.newDino(game, false, game.gameplay.level));
 					}
-					this.addSingleDino(game);
+					this.addSingleDino(game, game.gameplay.level);
 				}
 			},
 			increaseDinosaurNumber:function(){
@@ -860,11 +874,11 @@ var Game={
 			// "Grass"
 			this.game.ctx.fillStyle="#3bc870";
 			this.game.ctx.fillRect(0,45,WIDTH,40);
-			this.game.ctx.fillRect(0,HEIGHT - 85,WIDTH,40);		
+			this.game.ctx.fillRect(0,HEIGHT - GROUND_OFFSET,WIDTH,40);		
 
 			// Ground
 			this.game.ctx.fillStyle="#c3c83b";
-			this.game.ctx.fillRect(0,85,WIDTH,HEIGHT - 170);
+			this.game.ctx.fillRect(0,GROUND_OFFSET,WIDTH,HEIGHT - 170);
 			
 			this.game.ctx.fillStyle="#ffffff";
 			this.game.ctx.font="20px Verdana";
@@ -1357,7 +1371,7 @@ var AL={	//AL - ActionListener
 			}
 			return {
 				x: x >= 0 && x + w <= WIDTH,
-				y: y >= 85 && y + h <= HEIGHT - 85
+				y: y >= GROUND_OFFSET && y + h <= HEIGHT - GROUND_OFFSET
 			};
 		},
 		collides: function(tama, rocks, dinosaurs,lasers, powerups){
