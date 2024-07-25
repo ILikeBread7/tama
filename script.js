@@ -44,6 +44,8 @@ const TAMA_FLAME_UPGRADE = 0.25;
 const TAMA_FLAME_W = 128;
 const TAMA_FLAME_H = 64;
 
+const POWERUP_DROP_RATE = 0.1;
+
 const T_REX_SPAWN_INTERVAL = 3;
 const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
 const DINOS_UP_DOWN_MOVEMENT_LEVEL = 1;
@@ -271,6 +273,18 @@ var Game={
 				this.heartSprite = game.heart_img;
 			},
 
+			move: function(powerup) {
+				const speed = this.game.gameplay.tama.getSpeed() * 1.5;
+				powerup.timer++;
+				powerup.x += Math.max(60 - powerup.timer, 0) * speed / 60;
+			},
+
+			movePowerups: function() {
+				for (let i = 0; i < this.powerups.length; i++) {
+					this.move(this.powerups[i]);
+				}
+			},
+
 			addFlamePowerup: function(x, y) {
 				const that = this;
 				this.powerups.push({
@@ -278,6 +292,7 @@ var Game={
 					h: that.flameH,
 					x: x,
 					y: y,
+					timer: 0,
 
 					getSprite: function() {
 						return that.flameSprite;
@@ -295,6 +310,7 @@ var Game={
 					h: that.heartH,
 					x: x,
 					y: y,
+					timer: 0,
 
 					getSprite: function() {
 						return that.heartSprite;
@@ -992,7 +1008,7 @@ var Game={
 								this.tRexSpawned = false;
 								const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_HEART);
 								this.powerups.addHeart(x, y);
-							} else if (Math.random() < 0.1) {
+							} else if (Math.random() < POWERUP_DROP_RATE) {
 								const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_FLAME);
 								this.powerups.addFlamePowerup(x, y);
 							}
@@ -1095,6 +1111,7 @@ var Game={
 					gameplay.tama.move(gameplay.game.al.gameListener);
 					gameplay.dinosaurs.moveDinosaurs(gameplay.game);
 					gameplay.lasers.moveLasers();
+					gameplay.powerups.movePowerups();
 					gameplay.checkDinosaurFlame();
 					if (gameplay.points >= gameplay.superman.pointsActivated + 10) {
 						gameplay.superman.activate(gameplay.points);
