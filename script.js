@@ -36,17 +36,19 @@ const T_REX = 2;
 const POWERUP_FLAME = 0;
 const POWERUP_HEART = 1;
 
-const TAMA_STANDARD_SPEED = 2.75;
+const TAMA_STANDARD_SPEED = 2.5;
 const TAMA_SLOWDOWN_SPEED = 1;
 const TAMA_SLOWDOWN_FUEL_MAX = 200;
+const TAMA_SLOWDOWN_FUEL_REPLENISH_RATE = 1.5
 const TAMA_MAX_HP = 3;
-const TAMA_FLAME_UPGRADE = 0.25;
+const TAMA_FLAME_UPGRADE = 0.5;
 const TAMA_FLAME_W = 128;
 const TAMA_FLAME_H = 64;
 
-const POWERUP_DROP_RATE = 0.1;
+const POWERUP_DROP_RATE = 0.2;
+const MAX_FLAME_POWERUP_LEVEL = 6;
 
-const T_REX_SPAWN_INTERVAL = 1;
+const T_REX_SPAWN_INTERVAL = 11;
 const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
 const DINOS_UP_DOWN_MOVEMENT_LEVEL = 1;
 
@@ -298,7 +300,7 @@ var Game={
 						return that.flameSprite;
 					},
 					doEffect: function() {
-						that.game.gameplay.powerupLevel = Math.min(that.game.gameplay.powerupLevel + 1, 8);
+						that.game.gameplay.powerupLevel = Math.min(that.game.gameplay.powerupLevel + 1, MAX_FLAME_POWERUP_LEVEL);
 					}
 				});
 			},
@@ -342,7 +344,7 @@ var Game={
 					var dino=this.dinosaurs[i];
 					if (dino.type === T_REX) {
 						const tRexX = dino.x - game.gameplay.left_scroll;
-						if (tRexX < WIDTH * 3 / 4) {
+						if (tRexX < WIDTH * 0.5) {
 							dino.speed = game.gameplay.tama.getSpeed() * 1.05;
 						} else if (tRexX + dino.w > WIDTH) {
 							dino.speed = game.gameplay.tama.getSpeed() * 0.95;
@@ -573,7 +575,7 @@ var Game={
 				if (this.slowdown) {
 					this.slowdownFuel = Math.max(this.slowdownFuel - 1, 0);
 				} else {
-					this.slowdownFuel = Math.min(this.slowdownFuel + 1, TAMA_SLOWDOWN_FUEL_MAX);
+					this.slowdownFuel = Math.min(this.slowdownFuel + TAMA_SLOWDOWN_FUEL_REPLENISH_RATE, TAMA_SLOWDOWN_FUEL_MAX);
 				}
 				if (this.slowdownFuel <= 0) {
 					this.deactivateSlowdown();
@@ -859,7 +861,12 @@ var Game={
 		drawLasers:function(){
 			for(var i=0;i<this.lasers.lasers.length;i++){
 				var laser=this.lasers.lasers[i];
-				if(laser.x+this.lasers.w-this.left_scroll<0){
+				if (
+					(laser.x + this.lasers.w - this.left_scroll < 0)
+					|| (laser.x > this.left_scroll + WIDTH * 2)
+					|| (laser.y + laser.h < 0)
+					|| (laser.y > HEIGHT)
+				) {
 					this.lasers.lasers.splice(i,1);
 					i--;
 				}
@@ -1415,8 +1422,19 @@ var AL={	//AL - ActionListener
 			};
 		},
 		collides: function(tama, rocks, dinosaurs,lasers, powerups){
-			if(tama.isHit())
+			for(let i = 0; i < powerups.powerups.length; i++) {
+				const powerup = powerups.powerups[i];
+				if (this.singleCollission(tama, powerup)) {
+					powerup.doEffect();
+					powerups.powerups.splice(i, 1);
+					i--;
+				}
+			}
+
+			if (tama.isHit()) {
 				return false;
+			}
+			
 			for(var i=0;i<rocks.rocks.length;i++){
 				var rock=rocks.rocks[i];
 				if (this.singleCollission(tama, { x: rock.x, y: rock.y, w: rocks.wh, h: rocks.wh })) {
@@ -1433,15 +1451,6 @@ var AL={	//AL - ActionListener
 				var laser=lasers.lasers[i];
 				if (this.singleCollission(tama, { x: laser.x, y: laser.y, w: lasers.w, h: lasers.w })) {
 					return true;
-				}
-			}
-
-			for(let i = 0; i < powerups.powerups.length; i++) {
-				const powerup = powerups.powerups[i];
-				if (this.singleCollission(tama, powerup)) {
-					powerup.doEffect();
-					powerups.powerups.splice(i, 1);
-					i--;
 				}
 			}
 
