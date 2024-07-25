@@ -937,7 +937,7 @@ var Game={
 			}
 		},
 		drawPause: function() {
-			const PAUSE_WIDTH = 200;
+			const PAUSE_WIDTH = 212;
 			const PAUSE_HEIGHT = 100;
 			const PAUSE_X = (WIDTH - PAUSE_WIDTH) / 2;
 			const PAUSE_Y = (HEIGHT - PAUSE_HEIGHT) / 2;
@@ -947,8 +947,8 @@ var Game={
 			this.game.ctx.fillStyle = "#ffffff";
 			this.game.ctx.font = "20px Verdana";
 			this.game.ctx.fillText('Pause', PAUSE_X + 70, PAUSE_Y + 30);
-			this.game.ctx.fillText('Press P to continue', PAUSE_X + 3, PAUSE_Y + 55);
-			this.game.ctx.fillText('or ESC to exit', PAUSE_X + 30, PAUSE_Y + 80);
+			this.game.ctx.fillText('Press ESC to continue', PAUSE_X + 3, PAUSE_Y + 55);
+			this.game.ctx.fillText('or H to exit', PAUSE_X + 50, PAUSE_Y + 80);
 		},
 		addBoom:function(x,down_y){
 			this.booms.add(x,down_y);
@@ -1214,8 +1214,7 @@ var Game={
 		this.ctx.fillText("WASD - movement",leftOffset+5,150+instructionsOffset);
 		this.ctx.fillText("H - slow down",leftOffset+5,180+instructionsOffset);
 		this.ctx.fillText("J - fire",leftOffset+5,210+instructionsOffset);
-		this.ctx.fillText("P - pause",leftOffset+5,240+instructionsOffset);
-		this.ctx.fillText("ESC - exit to title",leftOffset+5,270+instructionsOffset);
+		this.ctx.fillText("ESC - pause",leftOffset+5,240+instructionsOffset);
 		
 		this.ctx.fillText("Every 10 kills you get a bonus!",leftOffset+5,355+instructionsOffset);
 		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",leftOffset+5,385+instructionsOffset);
@@ -1293,17 +1292,18 @@ var AL={	//AL - ActionListener
 				
 				case 72:
 					this.keys[4]=true;
-					this.game.gameplay.tama.activateSlowdown();
+					if (this.game.gameplay.pause) {
+						this.game.gameplay.stop = true;
+					} else {
+						this.game.gameplay.tama.activateSlowdown();
+					}
 				break;
 				case 74:
 					this.keys[5]=true;
 				break;
-				break;
-				case 80:
-					this.game.gameplay.togglePause();
-				break;
+
 				case 27:
-					this.game.gameplay.stop=true;
+					this.game.gameplay.togglePause();
 				break;
 			}
 		},
