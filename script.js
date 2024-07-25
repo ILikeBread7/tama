@@ -46,7 +46,7 @@ const TAMA_FLAME_H = 64;
 
 const POWERUP_DROP_RATE = 0.1;
 
-const T_REX_SPAWN_INTERVAL = 3;
+const T_REX_SPAWN_INTERVAL = 1;
 const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
 const DINOS_UP_DOWN_MOVEMENT_LEVEL = 1;
 
@@ -371,19 +371,42 @@ var Game={
 								game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2 + LASERS_GAP, 0);
 							break;
 							case TRICERATOPS:
-								game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2, Math.atan2(dino.y - game.gameplay.tama.y, dino.x - game.gameplay.tama.x));
+								game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2, this.aimAtTama(dino, game.gameplay.tama));
 							break;
 							case T_REX:
-								if (game.gameplay.level >= 1) {
-									const T_REX_EYE_LEVEL = 30;
-									game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2 - T_REX_EYE_LEVEL - LASERS_GAP, 0);
-									game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2 - T_REX_EYE_LEVEL + LASERS_GAP, 0);
+								const T_REX_EYE_LEVEL = 30;
+								const EUPHO_LEVEL = 50;
+								const TURRET_START = 10;
+								const BASE_TURRET_ANGLE = Math.PI / 4 / 5;
+								const level = game.gameplay.level;
+								const tama = game.gameplay.tama;
+								if (level >= 5) {
+									game.gameplay.lasers.add(dino.x, dino.y + TURRET_START, BASE_TURRET_ANGLE * 3);
+									game.gameplay.lasers.add(dino.x, dino.y + dino.h - TURRET_START, -BASE_TURRET_ANGLE * 3);
+								}
+								if (level >= 4) {
+									game.gameplay.lasers.add(dino.x, dino.y + TURRET_START, BASE_TURRET_ANGLE * 2);
+									game.gameplay.lasers.add(dino.x, dino.y + dino.h - TURRET_START, -BASE_TURRET_ANGLE * 2);
+								}
+								if (level >= 3) {
+									game.gameplay.lasers.add(dino.x, dino.y + TURRET_START, level >= 8 ? this.aimAtTama(dino, tama) : BASE_TURRET_ANGLE);
+									game.gameplay.lasers.add(dino.x, dino.y + dino.h - TURRET_START, level >= 8 ? this.aimAtTama(dino, tama) : -BASE_TURRET_ANGLE);
+								}
+								if (level >= 2) {
+									game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2 - T_REX_EYE_LEVEL + EUPHO_LEVEL, level >= 7 ? this.aimAtTama(dino, tama) : 0);
+								}
+								if (level >= 1) {
+									game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2 - T_REX_EYE_LEVEL - LASERS_GAP, level >= 6 ? this.aimAtTama(dino, tama) : 0);
+									game.gameplay.lasers.add(dino.x, dino.y + Math.floor(dino.h - game.gameplay.lasers.h) / 2 - T_REX_EYE_LEVEL + LASERS_GAP, level >= 6 ? this.aimAtTama(dino, tama) : 0);
 								}
 							break;
 						}
 						audioHandler.playEffect(LASER_TRACK);
 					}
 				}
+			},
+			aimAtTama: function(dino, tama) {
+				return Math.atan2(dino.y + dino.h / 2 - (tama.y + tama.h / 2), dino.x - (tama.x + tama.w));
 			},
 			newRaptor: function(game, single, level) {
 				var dinos = this;
