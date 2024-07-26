@@ -1158,11 +1158,11 @@ var Game={
 					gameplay.drawFuel();
 					gameplay.drawSlowdownfuel();
 					gameplay.drawPickedFlamePowerups();
+					gameplay.drawTama();
 					gameplay.drawRocks();
 					gameplay.drawDinosaurs();
 					gameplay.rocks.addRocks(gameplay.game);
 					gameplay.dinosaurs.addDinosaurs(gameplay.game);
-					gameplay.drawTama();
 					gameplay.drawBooms();
 					gameplay.drawPowerups();
 					gameplay.drawLasers();
