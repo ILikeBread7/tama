@@ -41,12 +41,14 @@ const TAMA_SLOWDOWN_SPEED = 1;
 const TAMA_SLOWDOWN_FUEL_MAX = 200;
 const TAMA_SLOWDOWN_FUEL_REPLENISH_RATE = 1.5
 const TAMA_MAX_HP = 3;
-const TAMA_FLAME_UPGRADE = 0.5;
+
+const MAX_FLAME_POWERUP_LEVEL = 6;
+const TAMA_FLAME_UPGRADE_HEIGHT = 1.5 / MAX_FLAME_POWERUP_LEVEL;
+const TAMA_FLAME_UPGRADE_WIDTH = 0.5;
 const TAMA_FLAME_W = 128;
 const TAMA_FLAME_H = 64;
 
 const POWERUP_DROP_RATE = 0.2;
-const MAX_FLAME_POWERUP_LEVEL = 6;
 
 const T_REX_SPAWN_INTERVAL = 11;
 const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
@@ -987,9 +989,10 @@ var Game={
 			if(this.tama.shooting) {
 				this.game.ctx.drawImage(
 					this.tama.getFlameSprite(),
-					this.tama.x + this.tama.w - this.left_scroll, this.tama.y,
-					TAMA_FLAME_W * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE),
-					TAMA_FLAME_H
+					this.tama.x + this.tama.w - this.left_scroll,
+					this.tama.y - TAMA_FLAME_H * this.powerupLevel * TAMA_FLAME_UPGRADE_HEIGHT / 2,
+					TAMA_FLAME_W * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE_WIDTH),
+					TAMA_FLAME_H * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE_HEIGHT)
 				);
 				audioHandler.playLoopingEffect(FIRE_TRACK);
 			} else {
@@ -1018,10 +1021,10 @@ var Game={
 			if(this.tama.shooting)
 				for(var i=0;i<this.dinosaurs.dinosaurs.length;i++){
 					var dino=this.dinosaurs.dinosaurs[i];
-					var flame_x=this.tama.x+this.tama.w;
-					var flame_y=this.tama.y;
-					var flame_w = TAMA_FLAME_W * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE);
-					var flame_h = TAMA_FLAME_H;
+					var flame_x = this.tama.x + this.tama.w;
+					var flame_y = this.tama.y - TAMA_FLAME_H * this.powerupLevel * TAMA_FLAME_UPGRADE_HEIGHT / 2;
+					var flame_w = TAMA_FLAME_W * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE_WIDTH);
+					var flame_h = TAMA_FLAME_H * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE_HEIGHT);
 					if(dino.x<flame_x+flame_w && dino.x+dino.w>flame_x && dino.y+dino.h>flame_y && dino.y<flame_y+flame_h){
 						isHit = true;
 						dino.hp--;
