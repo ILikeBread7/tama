@@ -19,8 +19,13 @@ HTMLElement.prototype.click = function(listener) {
 	this.addEventListener('click', listener);
 }
 
-function collideGlobal(e){	//for buttons
-	return (e.pageX>=this.x && e.pageX<=this.x+this.w && e.pageY>=this.y && e.pageY<=this.y+this.h);
+function collideGlobal(e) {	//for buttons
+	return (
+		(e.pageX - Game.menu.canvasLeft) / Game.menu.screenFactor >= this.x
+		&& (e.pageX - Game.menu.canvasLeft) / Game.menu.screenFactor <= this.x + this.w
+		&& (e.pageY - Game.menu.canvasTop) / Game.menu.screenFactor >= this.y
+		&& (e.pageY - Game.menu.canvasTop) / Game.menu.screenFactor <= this.y + this.h
+	);
 }
 
 let titleInterval = null;
@@ -197,6 +202,9 @@ var Game={
 	drawCycle: true,
 	phase:0,	//0=menu
 	menu:{
+		screenFactor: 1,
+		canvasTop: 0,
+		canvasLeft: 0,
 		button:null,
 		init:function(){
 			this.button={
@@ -998,7 +1006,7 @@ var Game={
 			}
 		},
 		drawPause: function() {
-			const PAUSE_WIDTH = 212;
+			const PAUSE_WIDTH = 248;
 			const PAUSE_HEIGHT = 100;
 			const PAUSE_X = (WIDTH - PAUSE_WIDTH) / 2;
 			const PAUSE_Y = (HEIGHT - PAUSE_HEIGHT) / 2;
@@ -1007,9 +1015,9 @@ var Game={
 			this.game.ctx.fillRect(PAUSE_X, PAUSE_Y, PAUSE_WIDTH, PAUSE_HEIGHT);
 			this.game.ctx.fillStyle = "#ffffff";
 			this.game.ctx.font = "20px Verdana";
-			this.game.ctx.fillText('Pause', PAUSE_X + 70, PAUSE_Y + 30);
-			this.game.ctx.fillText('Press ESC to continue', PAUSE_X + 3, PAUSE_Y + 55);
-			this.game.ctx.fillText('or H to exit', PAUSE_X + 50, PAUSE_Y + 80);
+			this.game.ctx.fillText('Pause', PAUSE_X + 95, PAUSE_Y + 30);
+			this.game.ctx.fillText('Press ESC / P to continue', PAUSE_X + 3, PAUSE_Y + 55);
+			this.game.ctx.fillText('or H to exit', PAUSE_X + 75, PAUSE_Y + 80);
 		},
 		addBoom:function(x,down_y){
 			this.booms.add(x,down_y);
@@ -1078,7 +1086,7 @@ var Game={
 			this.game.ctx.font="20px Verdana";
 			this.game.ctx.fillText("Your total score: "+score, SCORES_X + 10, SCORES_Y + 20);
 			this.game.ctx.fillText("Top scores:", SCORES_X + 10, SCORES_Y + 50);
-			this.game.ctx.fillText("Press ESC to exit or Enter to play again!", SCORES_X + 10, SCORES_Y + 420);
+			this.game.ctx.fillText("Press ESC / P to exit or Enter to play again!", SCORES_X + 10, SCORES_Y + 420);
 			var ctx=this.game.ctx;
 
 			const { highscores, currentScoreIndex } = this.updateHighscores(score, this.level);
@@ -1282,7 +1290,7 @@ var Game={
 		this.ctx.fillText("WASD - movement",leftOffset+5,150+instructionsOffset);
 		this.ctx.fillText("H - slow down",leftOffset+5,180+instructionsOffset);
 		this.ctx.fillText("J - fire",leftOffset+5,210+instructionsOffset);
-		this.ctx.fillText("ESC - pause",leftOffset+5,240+instructionsOffset);
+		this.ctx.fillText("ESC / P - pause",leftOffset+5,240+instructionsOffset);
 		
 		this.ctx.fillText("Every 10 kills you get a bonus!",leftOffset+5,355+instructionsOffset);
 		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",leftOffset+5,385+instructionsOffset);
@@ -1371,6 +1379,7 @@ var AL={	//AL - ActionListener
 				break;
 
 				case 27:
+				case 80:
 					this.game.gameplay.togglePause();
 				break;
 			}
@@ -1502,7 +1511,7 @@ var AL={	//AL - ActionListener
 		this.gameListener.click(e);
 	},
 	phaseScores:function(e){
-		if(e.keyCode==27){
+		if (e.keyCode === 27 || e.keyCode === 80) {
 			this.gameListener.resetKeys();
 			this.listenBackButton();
 		} else if (e.keyCode === 13) {
@@ -1536,7 +1545,17 @@ var AL={	//AL - ActionListener
 	}
 }
 
-function init(){
+function init() {
+	const container = document.getElementById('container');
+	const canvas = document.getElementById('canvas');
+	document.getElementById('fullscreen').addEventListener('click', e => {
+		e.target.blur();
+		if (document.fullscreenElement) {
+			document.exitFullscreen().then(() => canvas.focus());
+		} else {
+			container.requestFullscreen().then(() => canvas.focus());
+		}
+	});
 	AL.game=Game;
 	AL.gameListener.game=Game;
 	Game.al=AL;

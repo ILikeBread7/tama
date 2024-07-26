@@ -3,23 +3,27 @@
 	<head>
 		<title>Tama the time traveller</title>
 		<script src="script.js"></script>
+		<script src="events.js" defer></script>
 		<style>
 			a {
 				color: #fff;
 			}
 		</style>
 	</head>
-	<body style="margin:auto" onload="init();">
-		<canvas id="canvas" width="1280" height="720"></canvas>
-		<div id="credits" style="font-size:8px;color:#ffffff;background-color:rgba(0, 0, 0, 0.6);position:absolute;top:280px;left:460px;width:330px;padding:3px">
-			Music and sound effects by:
-			<p>Fire Loop by Iwan 'qubodup' Gabovitch, licensed with <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY 3.0</a> <a target="_blank" href="https://opengameart.org/users/qubodup">https://opengameart.org/users/qubodup</a></p>
-			<p>bomb_explosion_8bit by Luke.RUSTLTD, licensed with <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">CC0</a> <a target="_blank" href="https://opengameart.org/content/bombexplosion8bit">https://opengameart.org/content/bombexplosion8bit</a></p>
-			<p>5 Chiptunes (Action) by SubspaceAudio, licensed with <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">CC0</a> <a target="_blank" href="https://opengameart.org/content/5-chiptunes-action">https://opengameart.org/content/5-chiptunes-action</a></p>
-			<p>63 Digital sound effects (lasers, phasers, space etc.) by Kenney, licensed with <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">CC0</a> <a target="_blank" href="https://www.kenney.nl">https://www.kenney.nl</a></p>
-			<p>Retro Monster Roar by greg300, licensed with <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">CC0</a> <a target="_blank" href="https://opengameart.org/content/retro-monster-roar">https://opengameart.org/content/retro-monster-roar</a></p>
-			<p>Punch, slap, n' kick by CGEffex, licensed with <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY 3.0</a> <a target="_blank" href="https://freesound.org/people/CGEffex/sounds/98341/">https://freesound.org/people/CGEffex/sounds/98341/</a></p>
-			<p>8-Bit Sound Effects Library by Little Robot Sound Factory, licensed with <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY 3.0</a> <a target="_blank" href="https://www.littlerobotsoundfactory.com">https://www.littlerobotsoundfactory.com</a></p>
+	<body style="margin:auto;background-color:#000;" onload="init();">
+		<div id="container" style="width:1280;height:720;">
+			<canvas id="canvas" width="1280" height="720" style="position:absolute;"></canvas>
+			<button id="fullscreen" style="position:absolute;left:1000px;top:550px;">Fullscreen</button>
+			<div id="credits" style="font-size:8px;color:#ffffff;background-color:rgba(0, 0, 0, 0.6);position:absolute;left:900px;top:300px;width:330px;padding:3px">
+				Music and sound effects by:
+				<p>Fire Loop by Iwan 'qubodup' Gabovitch, licensed with <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY 3.0</a> <a target="_blank" href="https://opengameart.org/users/qubodup">https://opengameart.org/users/qubodup</a></p>
+				<p>bomb_explosion_8bit by Luke.RUSTLTD, licensed with <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">CC0</a> <a target="_blank" href="https://opengameart.org/content/bombexplosion8bit">https://opengameart.org/content/bombexplosion8bit</a></p>
+				<p>5 Chiptunes (Action) by SubspaceAudio, licensed with <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">CC0</a> <a target="_blank" href="https://opengameart.org/content/5-chiptunes-action">https://opengameart.org/content/5-chiptunes-action</a></p>
+				<p>63 Digital sound effects (lasers, phasers, space etc.) by Kenney, licensed with <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">CC0</a> <a target="_blank" href="https://www.kenney.nl">https://www.kenney.nl</a></p>
+				<p>Retro Monster Roar by greg300, licensed with <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">CC0</a> <a target="_blank" href="https://opengameart.org/content/retro-monster-roar">https://opengameart.org/content/retro-monster-roar</a></p>
+				<p>Punch, slap, n' kick by CGEffex, licensed with <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY 3.0</a> <a target="_blank" href="https://freesound.org/people/CGEffex/sounds/98341/">https://freesound.org/people/CGEffex/sounds/98341/</a></p>
+				<p>8-Bit Sound Effects Library by Little Robot Sound Factory, licensed with <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY 3.0</a> <a target="_blank" href="https://www.littlerobotsoundfactory.com">https://www.littlerobotsoundfactory.com</a></p>
+			</div>
 		</div>
 		
 		<img id="title_img" src="title.png" style="display:none"><img/>
