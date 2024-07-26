@@ -39,7 +39,8 @@ const POWERUP_HEART = 1;
 const TAMA_STANDARD_SPEED = 2.5;
 const TAMA_SLOWDOWN_SPEED = 1;
 const TAMA_SLOWDOWN_FUEL_MAX = 200;
-const TAMA_SLOWDOWN_FUEL_REPLENISH_RATE = 1.5
+const TAMA_FUEL_MAX = 300;
+const TAMA_FUEL_REPLENISH_RATE = 1.5
 const TAMA_MAX_HP = 3;
 
 const MAX_FLAME_POWERUP_LEVEL = 6;
@@ -534,16 +535,12 @@ var Game={
 				return this.timer-this.hit_time<this.recovery_time;
 			},
 			shoot:function(){
-				if(this.shooting && this.fuel>=3 && !this.isHit()){
-					this.fuel-=3;
-					if(this.fuel<0)
-						this.fuel=0;
+				if (this.shooting && this.fuel > 0 && !this.isHit()) {
+					this.fuel = Math.max(this.fuel - 1, 0);
 				}
-				else{
-					this.fuel++;
-					this.shooting=false;
-					if(this.fuel>900)
-						this.fuel=900;
+				else {
+					this.fuel = Math.min(this.fuel + TAMA_FUEL_REPLENISH_RATE, TAMA_FUEL_MAX);
+					this.shooting = false;
 				}
 			},
 			getSprite:function(){
@@ -577,7 +574,7 @@ var Game={
 				if (this.slowdown) {
 					this.slowdownFuel = Math.max(this.slowdownFuel - 1, 0);
 				} else {
-					this.slowdownFuel = Math.min(this.slowdownFuel + TAMA_SLOWDOWN_FUEL_REPLENISH_RATE, TAMA_SLOWDOWN_FUEL_MAX);
+					this.slowdownFuel = Math.min(this.slowdownFuel + TAMA_FUEL_REPLENISH_RATE, TAMA_SLOWDOWN_FUEL_MAX);
 				}
 				if (this.slowdownFuel <= 0) {
 					this.deactivateSlowdown();
@@ -962,15 +959,15 @@ var Game={
 				this.game.ctx.drawImage(img, 1050 + i * 30, HEIGHT - 60);
 			}	
 		},
-		drawFuel:function(){
+		drawFuel: function(){
 			this.game.ctx.fillStyle="#fff";
 			this.game.ctx.fillText("Fuel:",620,HEIGHT - 15);
 			this.game.ctx.fillStyle="#000";
 			this.game.ctx.fillRect(680,HEIGHT - 35,100,25);
 
-			var fuel=Math.floor(this.game.gameplay.tama.fuel/9);
+			var fuel = Math.floor(this.game.gameplay.tama.fuel * 100 / TAMA_FUEL_MAX);
 			this.game.ctx.fillStyle="#12de32";
-			this.game.ctx.fillRect(680, HEIGHT- 35, fuel,25);
+			this.game.ctx.fillRect(680, HEIGHT- 35, fuel, 25);
 		},
 		drawSlowdownfuel:function(){
 			const DRAW_X = 940;
