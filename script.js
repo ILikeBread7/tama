@@ -50,6 +50,7 @@ const TAMA_FLAME_W = 128;
 const TAMA_FLAME_H = 64;
 
 const POWERUP_DROP_RATE = 0.2;
+const HEART_DROP_RATE = 0.05;
 
 const T_REX_SPAWN_INTERVAL = 11;
 const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
@@ -1038,9 +1039,15 @@ var Game={
 								this.tRexSpawned = false;
 								const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_HEART);
 								this.powerups.addHeart(x, y);
-							} else if (Math.random() < POWERUP_DROP_RATE) {
-								const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_FLAME);
-								this.powerups.addFlamePowerup(x, y);
+							} else {
+								const random = Math.random();
+								if (random < POWERUP_DROP_RATE) {
+									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_FLAME);
+									this.powerups.addFlamePowerup(x, y);
+								} else if (random < POWERUP_DROP_RATE + HEART_DROP_RATE) {
+									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_HEART);
+									this.powerups.addHeart(x, y);
+								}
 							}
 
 							if (!this.tRexSpawned && this.points >= this.lastTRexKilledPoints + T_REX_SPAWN_INTERVAL) {
