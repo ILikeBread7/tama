@@ -1408,6 +1408,7 @@ var Game={
 			this.dots.init();
 			this.superman.init(game);
 			this.supermanPoints.reset();
+			this.levelUpMessage.reset();
 			this.drawBackground();
 			this.pause=false;
 			this.stop=false;
