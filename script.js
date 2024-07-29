@@ -21,10 +21,10 @@ HTMLElement.prototype.click = function(listener) {
 
 function collideGlobal(e) {	//for buttons
 	return (
-		(e.pageX - Game.menu.canvasLeft) / Game.menu.screenFactor >= this.x
-		&& (e.pageX - Game.menu.canvasLeft) / Game.menu.screenFactor <= this.x + this.w
-		&& (e.pageY - Game.menu.canvasTop) / Game.menu.screenFactor >= this.y
-		&& (e.pageY - Game.menu.canvasTop) / Game.menu.screenFactor <= this.y + this.h
+		e.pageX - Game.menu.canvasLeft >= this.x * Game.menu.screenFactor
+		&& e.pageX - Game.menu.canvasLeft <= (this.x + this.w) * Game.menu.screenFactor
+		&& e.pageY - Game.menu.canvasTop >= this.y * Game.menu.screenFactor
+		&& e.pageY - Game.menu.canvasTop <= (this.y + this.h) * Game.menu.screenFactor
 	);
 }
 
