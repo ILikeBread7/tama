@@ -38,24 +38,39 @@ const RAPTOR = 0;
 const TRICERATOPS = 1;
 const T_REX = 2;
 
-const POWERUP_FLAME = 0;
+const POWERUP = 0;
 const POWERUP_HEART = 1;
+const POWERUP_SHIELD = 2;
+const POWERUP_CLOCK = 3;
+const POWERUP_FUEL = 4;
 
 const TAMA_STANDARD_SPEED = 2.5;
 const TAMA_SLOWDOWN_SPEED = 1;
 const TAMA_SLOWDOWN_FUEL_MAX = 200;
 const TAMA_FUEL_MAX = 300;
-const TAMA_FUEL_REPLENISH_RATE = 1.5
+const TAMA_FUEL_REPLENISH_RATE = 1.5;
+const TAMA_MAX_INVINCIBILITY = 10 * 60;
 const TAMA_MAX_HP = 3;
 
 const MAX_FLAME_POWERUP_LEVEL = 6;
 const TAMA_FLAME_UPGRADE_HEIGHT = 1.5 / MAX_FLAME_POWERUP_LEVEL;
 const TAMA_FLAME_UPGRADE_WIDTH = 0.5;
+
+const MAX_FUEL_POWERUP_LEVEL = 4;
+const TAMA_FUEL_UPGRADE = 0.25;
+
 const TAMA_FLAME_W = 128;
 const TAMA_FLAME_H = 64;
 
-const POWERUP_DROP_RATE = 0.2;
+const POWERUP_FLAME_DROP_RATE = 0.1;
+const POWERUP_FUEL_DROP_RATE = 0.05;
+const POWERUP_TIME_DROP_RATE = 0.05;
+
 const HEART_DROP_RATE = 0.05;
+const SHIELD_DROP_RATE = 0.05;
+const FUEL_DROP_RATE = 0.07;
+const CLOCK_DROP_RATE = 0.07;
+
 
 const T_REX_SPAWN_INTERVAL = 11;
 const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
@@ -229,6 +244,8 @@ var Game={
 		time:0,
 		level: 1,
 		powerupLevel: 0,
+		fuelPowerupLevel: 0,
+		timePowerupLevel: 0,
 		lastTRexKilledPoints: 0,
 		tRexSpawned: false,
 		initialized:false,
@@ -275,16 +292,32 @@ var Game={
 			powerups: [],
 			flameSprite: null,
 			heartSprite: null,
-			flameW: 50,
-			flameH: 50,
+			shieldSprite: null,
+			fuelSprite: null,
+			clockSprite: null,
+			fuelPowerupSprite: null,
+			timePowerupSptite: null,
+			powerupW: 50,
+			powerupH: 50,
 			heartW: 39,
 			heartH: 39,
+			shieldW: 42,
+			shieldH: 48,
+			clockW: 36,
+			clockH: 45,
+			fuelW: 46,
+			fuelH: 41,
 
 			init: function(game) {
 				this.game = game;
 				this.powerups = [];
 				this.flameSprite = game.flame_powerup_img;
 				this.heartSprite = game.heart_img;
+				this.shieldSprite = game.shield_img;
+				this.fuelSprite = game.fuel_img;
+				this.clockSprite = game.clock_img;
+				this.fuelPowerupSprite = game.fuel_powerup_img;
+				this.timePowerupSptite = game.time_powerup_img;
 			},
 
 			move: function(powerup) {
@@ -302,8 +335,8 @@ var Game={
 			addFlamePowerup: function(x, y) {
 				const that = this;
 				this.powerups.push({
-					w: that.flameW,
-					h: that.flameH,
+					w: that.powerupW,
+					h: that.powerupH,
 					x: x,
 					y: y,
 					timer: 0,
@@ -313,6 +346,44 @@ var Game={
 					},
 					doEffect: function() {
 						that.game.gameplay.powerupLevel = Math.min(that.game.gameplay.powerupLevel + 1, MAX_FLAME_POWERUP_LEVEL);
+					}
+				});
+			},
+
+			addFuelPowerup: function(x, y) {
+				const that = this;
+				this.powerups.push({
+					w: that.powerupW,
+					h: that.powerupH,
+					x: x,
+					y: y,
+					timer: 0,
+
+					getSprite: function() {
+						return that.fuelPowerupSprite;
+					},
+					doEffect: function() {
+						that.game.gameplay.fuelPowerupLevel = Math.min(that.game.gameplay.fuelPowerupLevel + 1, MAX_FUEL_POWERUP_LEVEL);
+						that.game.gameplay.tama.fuel = Math.min(that.game.gameplay.tama.fuel + TAMA_FUEL_MAX * TAMA_FUEL_UPGRADE, TAMA_FUEL_MAX * (1 + that.game.gameplay.fuelPowerupLevel * TAMA_FUEL_UPGRADE));
+					}
+				});
+			},
+
+			addTimePowerup: function(x, y) {
+				const that = this;
+				this.powerups.push({
+					w: that.powerupW,
+					h: that.powerupH,
+					x: x,
+					y: y,
+					timer: 0,
+
+					getSprite: function() {
+						return that.timePowerupSptite;
+					},
+					doEffect: function() {
+						that.game.gameplay.timePowerupLevel = Math.min(that.game.gameplay.timePowerupLevel + 1, MAX_FUEL_POWERUP_LEVEL);
+						that.game.gameplay.tama.slowdownFuel = Math.min(that.game.gameplay.tama.slowdownFuel + TAMA_SLOWDOWN_FUEL_MAX * TAMA_FUEL_UPGRADE, TAMA_SLOWDOWN_FUEL_MAX * (1 + that.game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE));
 					}
 				});
 			},
@@ -335,8 +406,87 @@ var Game={
 				});
 			},
 
+			addShield: function(x, y) {
+				const that = this;
+				this.powerups.push({
+					w: that.shieldW,
+					h: that.shieldH,
+					x: x,
+					y: y,
+					timer: 0,
+
+					getSprite: function() {
+						return that.shieldSprite;
+					},
+					doEffect: function() {
+						that.game.gameplay.tama.invincibilityTimer = TAMA_MAX_INVINCIBILITY;
+					}
+				});
+			},
+
+			addFuel: function(x, y) {
+				const that = this;
+				this.powerups.push({
+					w: that.fuelW,
+					h: that.fuelH,
+					x: x,
+					y: y,
+					timer: 0,
+
+					getSprite: function() {
+						return that.fuelSprite;
+					},
+					doEffect: function() {
+						that.game.gameplay.tama.fuel = TAMA_FUEL_MAX * (1 + that.game.gameplay.fuelPowerupLevel * TAMA_FUEL_UPGRADE);
+					}
+				});
+
+			},
+
+			addClock: function(x, y) {
+				const that = this;
+				this.powerups.push({
+					w: that.clockW,
+					h: that.clockH,
+					x: x,
+					y: y,
+					timer: 0,
+
+					getSprite: function() {
+						return that.clockSprite;
+					},
+					doEffect: function() {
+						that.game.gameplay.tama.slowdownFuel = TAMA_SLOWDOWN_FUEL_MAX * (1 + that.game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE);
+					}
+				});
+
+			},
+
 			getPositionFromDino: function(dino, type) {
-				const { w, h } = type === POWERUP_FLAME ? { w: this.flameW, h: this.flameH } : { w: this.heartW, h: this.heartH };
+				let w, h;
+				switch (type) {
+					case POWERUP_HEART:
+						w = this.heartW;
+						h = this.heartH;
+					break;
+					case POWERUP_SHIELD:
+						w = this.shieldW;
+						h = this.shieldH;
+					break;
+					case POWERUP_CLOCK:
+						w = this.clockW;
+						h = this.clockH;
+					break;
+					case POWERUP_FUEL:
+						w = this.fuelW;
+						h = this.fuelH;
+					break;
+					case POWERUP:
+					default:
+						w = this.powerupW;
+						h = this.powerupH;
+					break;
+				};
 				return { x : Math.floor(dino.x + (dino.w - w) / 2), y: Math.floor(dino.y + (dino.h - h) / 2) };
 			}
 		},
@@ -528,10 +678,11 @@ var Game={
 			timer:0,
 			recovery_time:120,
 			hit_time:-this.recovery_time,
-			fuel:900,
+			fuel: TAMA_FUEL_MAX,
 			slowdownFuel: TAMA_SLOWDOWN_FUEL_MAX,
 			slowdown: false,
 			shooting:false,
+			invincibilityTimer: 0,
 			directionX: 0,	//0=nothing, 1=left, 2=right
 			directionY: 0,	//0=nothing, 3=up, 4=down
 			
@@ -543,12 +694,15 @@ var Game={
 			isHit:function(){
 				return this.timer-this.hit_time<this.recovery_time;
 			},
-			shoot:function(){
+			isInvincible: function() {
+				return this.invincibilityTimer > 0;
+			},
+			shoot:function(fuelPowerupLevel) {
 				if (this.shooting && this.fuel > 0 && !this.isHit()) {
 					this.fuel = Math.max(this.fuel - 1, 0);
 				}
 				else {
-					this.fuel = Math.min(this.fuel + TAMA_FUEL_REPLENISH_RATE, TAMA_FUEL_MAX);
+					this.fuel = Math.min(this.fuel + TAMA_FUEL_REPLENISH_RATE * (1 + fuelPowerupLevel * TAMA_FUEL_UPGRADE), TAMA_FUEL_MAX * (1 + fuelPowerupLevel * TAMA_FUEL_UPGRADE));
 					this.shooting = false;
 				}
 			},
@@ -574,23 +728,26 @@ var Game={
 				this.directionX = 0;
 				this.directionY = 0;
 			},
-			move:function(gameListener){
+			move:function(gameListener, game){
 				this.x+=this.getSpeed();
 				gameListener.tamaMove(this.directionX, this.directionY);
-				this.shoot();
+				this.shoot(game.gameplay.fuelPowerupLevel);
 				this.resetTemps();
 				this.timer++;
 				if (this.slowdown) {
 					this.slowdownFuel = Math.max(this.slowdownFuel - 1, 0);
 				} else {
-					this.slowdownFuel = Math.min(this.slowdownFuel + TAMA_FUEL_REPLENISH_RATE, TAMA_SLOWDOWN_FUEL_MAX);
+					this.slowdownFuel = Math.min(this.slowdownFuel + TAMA_FUEL_REPLENISH_RATE * (1 + game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE), TAMA_SLOWDOWN_FUEL_MAX * (1 + game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE));
 				}
 				if (this.slowdownFuel <= 0) {
 					this.deactivateSlowdown();
 				}
+				if (this.invincibilityTimer > 0) {
+					this.invincibilityTimer = Math.max(this.invincibilityTimer - 1, 0);
+				}
 			},
-			activateSlowdown: function() {
-				if (this.slowdownFuel >= TAMA_SLOWDOWN_FUEL_MAX) {
+			activateSlowdown: function(timePowerupLevel) {
+				if (this.slowdownFuel >= TAMA_SLOWDOWN_FUEL_MAX * (1 + timePowerupLevel * TAMA_FUEL_UPGRADE)) {
 					this.slowdown = true;
 					this.speed = TAMA_SLOWDOWN_SPEED;
 				}
@@ -621,10 +778,11 @@ var Game={
 				this.hp = TAMA_MAX_HP;
 				this.recovery_time=120;
 				this.hit_time=-this.recovery_time;
-				this.fuel=900;
+				this.fuel = TAMA_FUEL_MAX;
 				this.slowdownFuel = TAMA_SLOWDOWN_FUEL_MAX,
 				this.slowdown = false,
 				this.shooting=false;
+				this.invincibilityTimer = 0;
 				if(this.sprites.length==0){
 					this.sprites.push(game.tama_stand_img);
 					this.sprites.push(game.tama_run_img);
@@ -934,18 +1092,20 @@ var Game={
 			this.game.ctx.fillStyle="#c3c83b";
 			this.game.ctx.fillRect(0,GROUND_OFFSET,WIDTH,HEIGHT - 170);
 			
+			const SCORE_X = 190;
+
 			this.game.ctx.fillStyle="#ffffff";
 			this.game.ctx.font="20px Verdana";
 			this.game.ctx.fillText("Time:",15,30);
 			this.game.ctx.fillText("Distance:",175,30);
 			this.game.ctx.fillText("Kills:",435,30);
-			this.game.ctx.fillText("Total score:",225, HEIGHT - 15);
+			this.game.ctx.fillText("Total score:", SCORE_X, HEIGHT - 15);
 			this.game.ctx.fillText('Level:', 670, 30);
 			
 			this.game.ctx.fillText(this.timeFormat(this.time),80,30);
 			this.game.ctx.fillText(Math.floor(this.tama.x/100),275,30);
 			this.game.ctx.fillText(this.points,490,30);
-			this.game.ctx.fillText(this.calculateTotalScore(),345, HEIGHT - 15);
+			this.game.ctx.fillText(this.calculateTotalScore(), SCORE_X + 120, HEIGHT - 15);
 			this.game.ctx.fillText(this.level, 735, 30);
 			
 			this.drawDots();
@@ -969,29 +1129,44 @@ var Game={
 			}	
 		},
 		drawFuel: function(){
-			this.game.ctx.fillStyle="#fff";
-			this.game.ctx.fillText("Fuel:",620,HEIGHT - 15);
-			this.game.ctx.fillStyle="#000";
-			this.game.ctx.fillRect(680,HEIGHT - 35,100,25);
+			const FUEL_X = 450;
+			const FUEL_BASE_W = 100;
+			const fuelTotalW = FUEL_BASE_W * (1 + this.game.gameplay.fuelPowerupLevel * TAMA_FUEL_UPGRADE);
 
-			var fuel = Math.floor(this.game.gameplay.tama.fuel * 100 / TAMA_FUEL_MAX);
+			this.game.ctx.fillStyle="#fff";
+			this.game.ctx.fillText("Fuel:", FUEL_X, HEIGHT - 15);
+			this.game.ctx.fillStyle="#000";
+			this.game.ctx.fillRect(FUEL_X + 60, HEIGHT - 35, fuelTotalW, 25);
+
+			var fuel = Math.floor(this.game.gameplay.tama.fuel * FUEL_BASE_W / TAMA_FUEL_MAX);
 			this.game.ctx.fillStyle="#12de32";
-			this.game.ctx.fillRect(680, HEIGHT- 35, fuel, 25);
+			this.game.ctx.fillRect(FUEL_X + 60, HEIGHT- 35, fuel, 25);
 		},
 		drawSlowdownfuel:function(){
-			const DRAW_X = 940;
+			const DRAW_X = 720;
+			const FUEL_BASE_W = 100;
+			const fuelTotalW = FUEL_BASE_W * (1 + this.game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE);
 
 			this.game.ctx.fillStyle= '#fff';
-			this.game.ctx.fillText('Slowdown:', 820, HEIGHT - 15);
+			this.game.ctx.fillText('Slowdown:', DRAW_X, HEIGHT - 15);
 			this.game.ctx.fillStyle= '#000';
-			this.game.ctx.fillRect(DRAW_X, HEIGHT - 35, 100, 25);
+			this.game.ctx.fillRect(DRAW_X + 120, HEIGHT - 35, fuelTotalW, 25);
 
-			const fuel = Math.floor(this.game.gameplay.tama.slowdownFuel * 100 / TAMA_SLOWDOWN_FUEL_MAX);
+			const fuel = Math.floor(this.game.gameplay.tama.slowdownFuel * FUEL_BASE_W / TAMA_SLOWDOWN_FUEL_MAX);
 			this.game.ctx.fillStyle = '#de1232';
-			this.game.ctx.fillRect(DRAW_X, HEIGHT - 35, fuel, 25);
+			this.game.ctx.fillRect(DRAW_X + 120, HEIGHT - 35, fuel, 25);
 		},
 		drawTama:function(){
 			this.game.ctx.drawImage(this.tama.getSprite(),this.tama.x-this.left_scroll,this.tama.y);
+			if (
+				this.tama.isInvincible()
+				&& (
+					this.tama.invincibilityTimer > 60 * 3
+					|| Math.floor(this.tama.invincibilityTimer / 10) % 2 === 0
+				)
+			) {
+				this.game.ctx.drawImage(this.game.shield_img, this.tama.x - this.left_scroll + 3, this.tama.y + 12);
+			}
 			if(this.tama.shooting) {
 				this.game.ctx.drawImage(
 					this.tama.getFlameSprite(),
@@ -1049,12 +1224,27 @@ var Game={
 								this.powerups.addHeart(x, y);
 							} else {
 								const random = Math.random();
-								if (random < POWERUP_DROP_RATE) {
-									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_FLAME);
+								if (random < POWERUP_FLAME_DROP_RATE) {
+									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP);
 									this.powerups.addFlamePowerup(x, y);
-								} else if (random < POWERUP_DROP_RATE + HEART_DROP_RATE) {
+								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE) {
+									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP);
+									this.powerups.addFuelPowerup(x, y);
+								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE) {
+									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP);
+									this.powerups.addTimePowerup(x, y);
+								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE) {
 									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_HEART);
 									this.powerups.addHeart(x, y);
+								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE + SHIELD_DROP_RATE) {
+									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_SHIELD);
+									this.powerups.addShield(x, y);
+								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE + SHIELD_DROP_RATE + FUEL_DROP_RATE) {
+									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_FUEL);
+									this.powerups.addFuel(x, y);
+								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE + SHIELD_DROP_RATE + FUEL_DROP_RATE + CLOCK_DROP_RATE ) {
+									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_CLOCK);
+									this.powerups.addClock(x, y);
 								}
 							}
 
@@ -1153,7 +1343,7 @@ var Game={
 					gameplay.left_scroll+=gameplay.tama.getSpeed();
 					gameplay.game.al.gameListener.setTamaShoot();
 					gameplay.game.al.gameListener.setTamaDirection();
-					gameplay.tama.move(gameplay.game.al.gameListener);
+					gameplay.tama.move(gameplay.game.al.gameListener, gameplay.game);
 					gameplay.dinosaurs.moveDinosaurs(gameplay.game);
 					gameplay.lasers.moveLasers();
 					gameplay.powerups.movePowerups();
@@ -1205,6 +1395,8 @@ var Game={
 			this.bonus=0;
 			this.level = 1;
 			this.powerupLevel = 0;
+			this.fuelPowerupLevel = 0;
+			this.timePowerupLevel = 0;
 			this.lastTRexKilledPoints = 0;
 			this.tRexSpawned = false;
 			this.tama.init(game);
@@ -1249,6 +1441,11 @@ var Game={
 		this.tRex1_img = document.getElementById("tRex1_img");
 		this.tRex2_img = document.getElementById("tRex2_img");
 		this.flame_powerup_img = document.getElementById("powerup_img");
+		this.fuel_powerup_img = document.getElementById("fuel_powerup_img");
+		this.time_powerup_img = document.getElementById("time_powerup_img");
+		this.shield_img = document.getElementById("shield_img");
+		this.fuel_img = document.getElementById("fuel_img");
+		this.clock_img = document.getElementById("clock_img");
 		this.explosion1_img=document.getElementById("explosion1_img");
 		this.explosion2_img=document.getElementById("explosion2_img");
 		this.laser_img=document.getElementById("laser_img");
@@ -1371,7 +1568,7 @@ var AL={	//AL - ActionListener
 					if (this.game.gameplay.pause) {
 						this.game.gameplay.stop = true;
 					} else {
-						this.game.gameplay.tama.activateSlowdown();
+						this.game.gameplay.tama.activateSlowdown(this.game.gameplay.timePowerupLevel);
 					}
 				break;
 				case 74:
@@ -1447,7 +1644,7 @@ var AL={	//AL - ActionListener
 				}
 			}
 
-			if (tama.isHit()) {
+			if (tama.isHit() || tama.isInvincible()) {
 				return false;
 			}
 			
