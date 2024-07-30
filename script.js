@@ -1732,10 +1732,19 @@ var AL={	//AL - ActionListener
 		}
 	},
 	keydown:function(e){
-		if(this.game.phase==2)
-			this.gameListener.keydown(e);
-		else if(this.game.phase==3)
-			this.phaseScores(e);
+		switch (this.game.phase) {
+			case 0: // menu
+				if (e.keyCode === 13) {
+					this.startGame();
+				}
+			break;
+			case 2: // gameplay
+				this.gameListener.keydown(e);
+			break;
+			case 3: // highscores
+				this.phaseScores(e);
+			break;
+		}
 	},
 	keyup:function(e){
 		if(this.game.phase==2)
