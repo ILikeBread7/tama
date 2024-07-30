@@ -1326,6 +1326,7 @@ var Game={
 			clearInterval(titleInterval);
 			var gameplay=this;
 			var interval=setInterval(function(){
+				gameplay.game.al.gameListener.pollGamepads();
 				if(gameplay.stop){
 					clearInterval(interval);
 					gameplay.game.menu.button.hover = false;
@@ -1384,6 +1385,18 @@ var Game={
 					if(gameplay.tama.hp<=0){
 						clearInterval(interval);
 						gameplay.showScores();
+						const gamepadScoresInterval = setInterval(() => {
+							const keys = pollGamepads();
+							gameplay.game.al.gameListener.updateOldGamepadKeys(keys);
+							if (keys.select) {
+								clearInterval(gamepadScoresInterval);
+								gameplay.game.al.gameListener.resetKeys();
+								gameplay.game.al.listenBackButton();
+							} else if (keys.start) {
+								clearInterval(gamepadScoresInterval);
+								gameplay.game.al.startGame();
+							}
+						}, 100 / 6);
 					}
 				}
 			},100/6);
@@ -1527,6 +1540,7 @@ var AL={	//AL - ActionListener
 	gameListener:{
 		game:null,
 		keys:[false,false,false,false,false,false,false],
+		oldGamepadKeys: {},
 		
 		resetKeys:function(){
 			for(var i=0;i<this.keys.length;i++)
@@ -1548,6 +1562,33 @@ var AL={	//AL - ActionListener
 			this.game.gameplay.tama.shooting=this.keys[5];
 		},
 		click:function(e){
+		},
+		pollGamepads: function() {
+			const keys = pollGamepads();
+
+			if (keys.start && !this.oldGamepadKeys.start) {
+				this.game.gameplay.togglePause();
+			}
+			
+			this.keys[0] = keys.left;
+			this.keys[1] = keys.right;
+			this.keys[2] = keys.up;
+			this.keys[3] = keys.down;
+			this.keys[4] = keys.special;
+			this.keys[5] = keys.fire;
+			
+			if (keys.special) {
+				if (this.game.gameplay.pause) {
+					this.game.gameplay.stop = true;
+				} else {
+					this.game.gameplay.tama.activateSlowdown(this.game.gameplay.timePowerupLevel);
+				}
+			}
+
+			this.oldGamepadKeys = keys;
+		},
+		updateOldGamepadKeys: function(keys) {
+			this.oldGamepadKeys = keys;
 		},
 		keydown:function(e){
 			switch(e.keyCode){
