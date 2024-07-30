@@ -1385,15 +1385,13 @@ var Game={
 					if(gameplay.tama.hp<=0){
 						clearInterval(interval);
 						gameplay.showScores();
-						const gamepadScoresInterval = setInterval(() => {
+						gameplay.game.al.gamepadScoresInterval = setInterval(() => {
 							const keys = pollGamepads();
 							gameplay.game.al.gameListener.updateOldGamepadKeys(keys);
 							if (keys.select) {
-								clearInterval(gamepadScoresInterval);
 								gameplay.game.al.gameListener.resetKeys();
 								gameplay.game.al.listenBackButton();
 							} else if (keys.start) {
-								clearInterval(gamepadScoresInterval);
 								gameplay.game.al.startGame();
 							}
 						}, 100 / 6);
@@ -1537,6 +1535,7 @@ var Game={
 
 var AL={	//AL - ActionListener
 	game:null,
+	gamepadScoresInterval: null,
 	gameListener:{
 		game:null,
 		keys:[false,false,false,false,false,false,false],
@@ -1731,11 +1730,13 @@ var AL={	//AL - ActionListener
 	startGame: function() {
 		this.game.phase = 2;	// 2=gameplay
 		$('#credits').hide();
+		clearInterval(this.gamepadScoresInterval);
 		this.game.gameplay.init(this.game);
 	},
 	listenBackButton:function(){
 		this.game.phase=0;	//0=menu
 		this.game.menu.button.hover = false;
+		clearInterval(this.gamepadScoresInterval);
 		titleInterval = setInterval(() => {
 			this.game.drawTitle();
 			this.game.drawMenu();
