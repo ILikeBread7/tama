@@ -1509,9 +1509,10 @@ var Game={
 
 		this.ctx.fillText("In game controls:",leftOffset+5,120+instructionsOffset);
 		this.ctx.fillText("WASD - movement",leftOffset+5,150+instructionsOffset);
-		this.ctx.fillText("H - slow down",leftOffset+5,180+instructionsOffset);
+		this.ctx.fillText("H - slowdown",leftOffset+5,180+instructionsOffset);
 		this.ctx.fillText("J - fire",leftOffset+5,210+instructionsOffset);
 		this.ctx.fillText("ESC / P - pause",leftOffset+5,240+instructionsOffset);
+		this.ctx.fillText("Gamepad support available!",leftOffset + 5, 270 + instructionsOffset);
 		
 		this.ctx.fillText("Every 10 kills you get a bonus!",leftOffset+5,355+instructionsOffset);
 		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",leftOffset+5,385+instructionsOffset);
