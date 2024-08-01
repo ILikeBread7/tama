@@ -194,7 +194,9 @@ const audioHandler = (() => {
 
 var Game={
 	canvas:null,ctx:null,
-	title_img:null,flame1_title_img:null,flame2_title_img:null,start_img:null,start_img_hover:null,
+	title_img_back: null,
+	title_img_front: null,
+	flame1_title_img:null,flame2_title_img:null,start_img:null,start_img_hover:null,
 	tama_stand_img:null,tama_run_img:null,tama_stand_hit_img:null,tama_run_hit_img:null,tama_flame_run:null,tama_flame_stand:null,
 	flame1_img:null,flame2_img:null,
 	raptor1_img:null,raptor2_img:null,
@@ -211,8 +213,13 @@ var Game={
 		canvasLeft: 0,
 		button:null,
 		init:function(){
+			const BUTTON_W = 230;
+			const BUTTON_H = 80;
 			this.button={
-				x:300,y:180,w:230,h:80,
+				x: Math.floor((WIDTH - BUTTON_W) * 0.48),
+				y: Math.floor((HEIGHT - BUTTON_H) * 0.66),
+				w: BUTTON_W, 
+				h: BUTTON_H,
 				hover: false,
 				getImg: function() {
 					return this.hover ? Game.start_img_hover : Game.start_img;
@@ -1422,7 +1429,8 @@ var Game={
 	},
 	init:function(){
 		this.canvas=document.getElementById("canvas");
-		this.title_img=document.getElementById("title_img");
+		this.title_img_back = document.getElementById("title_img_back");
+		this.title_img_front = document.getElementById("title_img_front");
 		this.flame1_title_img=document.getElementById("flame1_title_img");
 		this.flame2_title_img=document.getElementById("flame2_title_img");
 		this.start_img=document.getElementById("start_img");
@@ -1475,10 +1483,22 @@ var Game={
 	},
 	drawTitle:function(){
 		audioHandler.stopAll();
-		this.ctx.drawImage(this.title_img,0,0);
+		this.ctx.drawImage(this.title_img_back, 0, 0);
 		$('#credits').show();
 
-		const instructionsOffset = 180;
+		for (let i = 0; i < 2; i++) {
+			const sign = i === 0 ? -1 : 1;
+			for (let j = 0; j < 5; j++) {
+				const x = 581 + (sign * 91) + sign * 40 * j;
+				const y = 388 + 45 * j;
+				this.ctx.drawImage(this.drawCycle ? this.flame1_title_img : this.flame2_title_img, x, y);
+			}
+		}
+		this.drawCycle = !this.drawCycle;
+
+		this.ctx.drawImage(this.title_img_front, 0, 0);
+
+		const instructionsOffset = 120;
 		const leftOffset = 5;
 
 		this.ctx.fillStyle="#000000";
@@ -1496,28 +1516,21 @@ var Game={
 		this.ctx.fillText("Every 10 kills you get a bonus!",leftOffset+5,355+instructionsOffset);
 		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",leftOffset+5,385+instructionsOffset);
 
+		const SIGN_W = 280;
+		const SIGN_H = 8;
+		const SIGN_X = WIDTH - SIGN_W;
+		const SIGN_Y = HEIGHT - SIGN_H;
+		this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+		this.ctx.fillRect(SIGN_X, SIGN_Y - 20, SIGN_W, SIGN_H + 20);
 		this.ctx.fillStyle = "#fff";
-		this.ctx.strokeStyle = "#000";
+		this.ctx.strokeStyle = "#555";
 		const sign = {
-			text: 'I_LIKE_BREAD7 2015 - 2021',
-			x: 500,
-			y: 592
+			text: 'I_LIKE_BREAD7 2015 - 2024',
+			x: SIGN_X,
+			y: SIGN_Y
 		};
 		this.ctx.fillText(sign.text, sign.x, sign.y);
 		this.ctx.strokeText(sign.text, sign.x, sign.y);
-
-		this.ctx.drawImage(this.drawCycle ? this.flame1_title_img : this.flame2_title_img, 370, 90);
-		this.ctx.font = "64px Verdana";
-		this.ctx.fillStyle = "#f00";
-		this.ctx.strokeStyle = "#fff";
-		const dx = {
-			text: 'DX',
-			x: 370,
-			y: 150
-		};
-		this.ctx.fillText(dx.text, dx.x, dx.y);
-		this.ctx.strokeText(dx.text, dx.x, dx.y);
-		this.drawCycle = !this.drawCycle;
 	},
 	drawMenu:function(){
 		var but = this.menu.button;
