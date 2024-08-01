@@ -50,10 +50,20 @@ const SHIELD_DROP_RATE = 0.05;
 const FUEL_DROP_RATE = 0.07;
 const CLOCK_DROP_RATE = 0.07;
 
-
 const T_REX_SPAWN_INTERVAL = 11;
 const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
 const DINOS_UP_DOWN_MOVEMENT_LEVEL = 1;
+
+const BG_COLORS = [
+	'#291eff',
+	'#007a00',
+	'#7a0000',
+	'#007a7a',
+	'#7a7a00',
+	'#7a007a',
+	'#7a7a7a',
+	'#000000'
+];
 
 const BGM_TRACK = 'Juhani Junkala [Retro Game Music Pack] Level 1.ogg';
 const EXPLOSION_TRACK = '8bit_bomb_explosion.ogg';
@@ -1057,8 +1067,10 @@ var Game={
 			return Math.floor(this.tama.x/100*(1+this.points)) + this.bonus;
 		},
 		drawBackground:function(){
+			const bgColor = BG_COLORS[(this.level - 1) % BG_COLORS.length];
+
 			// Top and bottom panels
-			this.game.ctx.fillStyle="#291eff";
+			this.game.ctx.fillStyle = bgColor;
 			this.game.ctx.fillRect(0,0,WIDTH,45);
 			this.game.ctx.fillRect(0,HEIGHT - 45,WIDTH,45);
 
