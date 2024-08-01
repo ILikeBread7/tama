@@ -1584,6 +1584,9 @@ var AL={	//AL - ActionListener
 				this.game.gameplay.togglePause();
 			}
 			
+			if (keys.select && this.game.gameplay.pause) {
+				this.game.gameplay.stop = true;
+			}
 			if (keys.special) {
 				if (this.game.gameplay.pause) {
 					this.game.gameplay.stop = true;
