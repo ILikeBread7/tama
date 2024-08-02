@@ -1144,14 +1144,15 @@ var Game={
 			const DRAW_X = 720;
 			const FUEL_BASE_W = 100;
 			const fuelTotalW = FUEL_BASE_W * (1 + this.game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE);
-
+			
 			this.game.ctx.fillStyle= '#fff';
 			this.game.ctx.fillText('Slowdown:', DRAW_X, HEIGHT - 15);
 			this.game.ctx.fillStyle= '#000';
 			this.game.ctx.fillRect(DRAW_X + 120, HEIGHT - 35, fuelTotalW, 25);
-
+			
 			const fuel = Math.floor(this.game.gameplay.tama.slowdownFuel * FUEL_BASE_W / TAMA_SLOWDOWN_FUEL_MAX);
-			this.game.ctx.fillStyle = '#de1232';
+			const maxFuel = TAMA_SLOWDOWN_FUEL_MAX * (1 + this.game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE);
+			this.game.ctx.fillStyle = this.game.gameplay.tama.slowdown || this.game.gameplay.tama.slowdownFuel >= maxFuel ? '#de1232' : '#7a1528';
 			this.game.ctx.fillRect(DRAW_X + 120, HEIGHT - 35, fuel, 25);
 		},
 		drawTama:function(){
