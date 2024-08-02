@@ -23,8 +23,8 @@ const POWERUP_SHIELD = 2;
 const POWERUP_CLOCK = 3;
 const POWERUP_FUEL = 4;
 
-const TAMA_STANDARD_SPEED = 2.5;
-const TAMA_SLOWDOWN_SPEED = 1;
+const TAMA_STANDARD_SPEED = 2.4;
+const TAMA_SLOWDOWN_SPEED = 0.75;
 const TAMA_SLOWDOWN_FUEL_MAX = 200;
 const TAMA_FUEL_MAX = 300;
 const TAMA_FUEL_REPLENISH_RATE = 1.5;
@@ -50,7 +50,8 @@ const SHIELD_DROP_RATE = 0.05;
 const FUEL_DROP_RATE = 0.07;
 const CLOCK_DROP_RATE = 0.07;
 
-const T_REX_SPAWN_INTERVAL = 11;
+const T_REX_SPAWN_INTERVAL = 13;
+const T_REX_SPAWN_INTERVAL_INCREASE = 0.25;
 const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
 const DINOS_UP_DOWN_MOVEMENT_LEVEL = 1;
 
@@ -248,7 +249,7 @@ var Game={
 		rocks:{
 			sprite:null,
 			number:1,
-			max_number:7,
+			max_number:4,
 			width:2400,
 			wh:50,	//wh=width height
 			rocks:[],
@@ -492,7 +493,7 @@ var Game={
 			tRexSprites: [],
 			dinosaurs:[],
 			number:2,
-			max_number:8,
+			max_number:5,
 			width:2400,
 			laser_freq:60*3,
 			all_on_screen:true,
@@ -609,9 +610,9 @@ var Game={
 			newTRex: function (game, level) {
 				var dinos = this;
 				return {
-					points: 10,
-					maxHp: 100 + 20 * level,
-					hp: 100 + 20 * level,
+					points: 8,
+					maxHp: 100 * (level + 1),
+					hp: 100 * (level + 1),
 					w: 149,
 					h: 121,
 					timer: 0,
@@ -715,7 +716,7 @@ var Game={
 			},
 			getSpeedModifier: function() {
 				const seconds = this.timer / 60;
-				return 1 + seconds / 300;
+				return Math.min(1 + seconds / 600, 1.25);
 			},
 			getSpeed:function(){
 				return this.speed * this.speed_multiplier * this.getSpeedModifier();
@@ -1223,31 +1224,32 @@ var Game={
 								this.powerups.addHeart(x, y);
 							} else {
 								const random = Math.random();
-								if (random < POWERUP_FLAME_DROP_RATE) {
+								const multiplier = dino.type === TRICERATOPS ? 1.5 : 1;
+								if (random < multiplier * POWERUP_FLAME_DROP_RATE) {
 									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP);
 									this.powerups.addFlamePowerup(x, y);
-								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE) {
+								} else if (random < multiplier * (POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE)) {
 									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP);
 									this.powerups.addFuelPowerup(x, y);
-								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE) {
+								} else if (random < multiplier * (POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE)) {
 									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP);
 									this.powerups.addTimePowerup(x, y);
-								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE) {
+								} else if (random < multiplier * (POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE)) {
 									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_HEART);
 									this.powerups.addHeart(x, y);
-								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE + SHIELD_DROP_RATE) {
+								} else if (random < multiplier * (POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE + SHIELD_DROP_RATE)) {
 									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_SHIELD);
 									this.powerups.addShield(x, y);
-								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE + SHIELD_DROP_RATE + FUEL_DROP_RATE) {
+								} else if (random < multiplier * (POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE + SHIELD_DROP_RATE + FUEL_DROP_RATE)) {
 									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_FUEL);
 									this.powerups.addFuel(x, y);
-								} else if (random < POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE + SHIELD_DROP_RATE + FUEL_DROP_RATE + CLOCK_DROP_RATE ) {
+								} else if (random < multiplier * (POWERUP_FLAME_DROP_RATE + POWERUP_FUEL_DROP_RATE + POWERUP_TIME_DROP_RATE + HEART_DROP_RATE + SHIELD_DROP_RATE + FUEL_DROP_RATE + CLOCK_DROP_RATE)) {
 									const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_CLOCK);
 									this.powerups.addClock(x, y);
 								}
 							}
 
-							if (!this.tRexSpawned && this.points >= this.lastTRexKilledPoints + T_REX_SPAWN_INTERVAL) {
+							if (!this.tRexSpawned && this.points >= this.lastTRexKilledPoints + Math.floor((1 + T_REX_SPAWN_INTERVAL_INCREASE * (this.level - 1)) * T_REX_SPAWN_INTERVAL)) {
 								this.dinosaurs.dinosaurs.push(this.dinosaurs.newTRex(this.game, this.level));
 								this.tRexSpawned = true;
 							}
@@ -1364,12 +1366,12 @@ var Game={
 					gameplay.drawFuel();
 					gameplay.drawSlowdownfuel();
 					gameplay.drawPickedFlamePowerups();
+					gameplay.drawBooms();
 					gameplay.drawTama();
 					gameplay.drawRocks();
 					gameplay.drawDinosaurs();
 					gameplay.rocks.addRocks(gameplay.game);
 					gameplay.dinosaurs.addDinosaurs(gameplay.game);
-					gameplay.drawBooms();
 					gameplay.drawPowerups();
 					gameplay.drawLasers();
 					gameplay.drawSuperman();
