@@ -66,133 +66,6 @@ const BG_COLORS = [
 	'#000000'
 ];
 
-const BGM_TRACK = 'Juhani Junkala [Retro Game Music Pack] Level 1.ogg';
-const EXPLOSION_TRACK = '8bit_bomb_explosion.ogg';
-const TAMA_DAMAGE_TRACK = '7.ogg';
-const LASER_TRACK = 'laser5.ogg';
-const ENEMY_DAMAGE_TRACK = 'Skeleton Roar.ogg';
-const FIRE_TRACK = 'qubodupFireLoop.ogg';
-const SUPERMAN_POINTS_TRACK = 'Jingle_Win_00.ogg';
-const SUPERMAN_FLYING_TRACK = 'Climb_Rope_Loop_00.ogg';
-
-const audioHandler = (() => {
-	const trackNames = [
-		BGM_TRACK,
-		EXPLOSION_TRACK,
-		TAMA_DAMAGE_TRACK,
-		LASER_TRACK,
-		ENEMY_DAMAGE_TRACK,
-		FIRE_TRACK,
-		SUPERMAN_POINTS_TRACK,
-		SUPERMAN_FLYING_TRACK
-	];
-
-	const trackVolumes = new Map([
-		[BGM_TRACK, 0.3],
-		[EXPLOSION_TRACK, 2],
-		[TAMA_DAMAGE_TRACK, 1],
-		[LASER_TRACK, 2],
-		[ENEMY_DAMAGE_TRACK, 2],
-		[FIRE_TRACK, 0.5],
-		[SUPERMAN_POINTS_TRACK, 1],
-		[SUPERMAN_FLYING_TRACK, 1]
-	]);
-
-	let tracksMapPromise = null;
-	let audioCtx = null;
-
-	const playFunc = (track, loop, volume) => {
-		const audioBuffer = track;
-		const trackSource = audioCtx.createBufferSource();
-
-		const gainNode = audioCtx.createGain();
-		trackSource.loop = loop;
-		trackSource.buffer = audioBuffer;
-		trackSource.connect(gainNode).connect(audioCtx.destination);
-
-		gainNode.gain.value = volume;
-
-		trackSource.start();
-		return trackSource;
-	}
-
-
-	let currentBgm = { name: null, track: null };
-	let currentLoopingEffects = [];
-
-	return {
-		init: function() {
-			if (tracksMapPromise !== null) {
-				return;
-			}
-			tracksMapPromise = (async () => {
-				const AudioContext = window.AudioContext || window.webkitAudioContext;
-				audioCtx = new AudioContext();
-		
-				const tracks = await Promise.all(trackNames.map(async trackName => {
-					const response = await fetch(`audio/${trackName}`);
-					const arrayBuffer = await response.arrayBuffer();
-					const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-					return audioBuffer;
-				}));
-			
-				return new Map((() => {
-					const result = [];
-					for (let i = 0; i < trackNames.length; i++) {
-						result.push([trackNames[i], tracks[i]]);
-					}
-					return result;
-				})());
-			})();
-		},
-		playBgm: function(trackName) {
-			if (trackName === currentBgm.name) {
-				return;
-			}
-			tracksMapPromise.then(tm => {
-				const track = tm.get(trackName);
-				if (currentBgm.track !== null) {
-					currentBgm.track.stop();
-				}
-				currentBgm = { name: trackName, track: playFunc(track, true, trackVolumes.get(trackName)) };
-			});
-		},
-		playEffect: function(trackName) {
-			tracksMapPromise.then(tm => {
-				const track = tm.get(trackName);
-				playFunc(track, false, trackVolumes.get(trackName));
-			});
-		},
-		playLoopingEffect: function(trackName) {
-			const effectIndex = currentLoopingEffects.findIndex(e => e.name === trackName);
-			if (effectIndex >= 0) {
-				return;
-			}
-			tracksMapPromise.then(tm => {
-				const track = tm.get(trackName);
-				const volume = trackName === ENEMY_DAMAGE_TRACK ? 5 : 1;
-				currentLoopingEffects.push({ name: trackName, track: playFunc(track, true, trackVolumes.get(trackName)) });
-			});
-		},
-		stopLoopingEffect: function(trackName) {
-			const effectIndex = currentLoopingEffects.findIndex(e => e.name === trackName);
-			if (effectIndex >= 0) {
-				currentLoopingEffects[effectIndex].track.stop();
-				currentLoopingEffects.splice(effectIndex, 1);
-			}
-		},
-		stopAll: function() {
-			if (currentBgm.track !== null) {
-				currentBgm.track.stop();
-				currentBgm = { name: null, track: null };
-			}
-			currentLoopingEffects.forEach(e => e.track.stop());
-			currentLoopingEffects = [];
-		}
-	};
-
-})();
-
 var Game={
 	canvas:null,ctx:null,
 	title_img_back: null,
@@ -280,8 +153,6 @@ var Game={
 				this.number=1;
 				this.all_on_screen=true;
 				this.addRocks(game);
-				audioHandler.init();
-				audioHandler.playBgm(BGM_TRACK);
 			}
 		},
 		powerups: {
@@ -337,6 +208,7 @@ var Game={
 					x: x,
 					y: y,
 					timer: 0,
+					heal: false,
 
 					getSprite: function() {
 						return that.flameSprite;
@@ -355,6 +227,7 @@ var Game={
 					x: x,
 					y: y,
 					timer: 0,
+					heal: false,
 
 					getSprite: function() {
 						return that.fuelPowerupSprite;
@@ -374,6 +247,7 @@ var Game={
 					x: x,
 					y: y,
 					timer: 0,
+					heal: false,
 
 					getSprite: function() {
 						return that.timePowerupSptite;
@@ -393,6 +267,7 @@ var Game={
 					x: x,
 					y: y,
 					timer: 0,
+					heal: true,
 
 					getSprite: function() {
 						return that.heartSprite;
@@ -411,6 +286,7 @@ var Game={
 					x: x,
 					y: y,
 					timer: 0,
+					heal: true,
 
 					getSprite: function() {
 						return that.shieldSprite;
@@ -429,6 +305,7 @@ var Game={
 					x: x,
 					y: y,
 					timer: 0,
+					heal: true,
 
 					getSprite: function() {
 						return that.fuelSprite;
@@ -448,6 +325,7 @@ var Game={
 					x: x,
 					y: y,
 					timer: 0,
+					heal: true,
 
 					getSprite: function() {
 						return that.clockSprite;
@@ -734,7 +612,12 @@ var Game={
 				if (this.slowdown) {
 					this.slowdownFuel = Math.max(this.slowdownFuel - 1, 0);
 				} else {
-					this.slowdownFuel = Math.min(this.slowdownFuel + TAMA_FUEL_REPLENISH_RATE * (1 + game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE), TAMA_SLOWDOWN_FUEL_MAX * (1 + game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE));
+					const maxFuel = TAMA_SLOWDOWN_FUEL_MAX * (1 + game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE);
+					const fuelWasFull = this.slowdownFuel >= maxFuel;
+					this.slowdownFuel = Math.min(this.slowdownFuel + TAMA_FUEL_REPLENISH_RATE * (1 + game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE), maxFuel);
+					if (!fuelWasFull && this.slowdownFuel >= maxFuel) {
+						audioHandler.playEffect(SLOWDOWN_FULL_TRACK);
+					}
 				}
 				if (this.slowdownFuel <= 0) {
 					this.deactivateSlowdown();
@@ -747,6 +630,7 @@ var Game={
 				if (this.slowdownFuel >= TAMA_SLOWDOWN_FUEL_MAX * (1 + timePowerupLevel * TAMA_FUEL_UPGRADE)) {
 					this.slowdown = true;
 					this.speed = TAMA_SLOWDOWN_SPEED;
+					audioHandler.playEffect(SLOWDOWN_TRACK);
 				}
 			},
 			deactivateSlowdown: function() {
@@ -1217,9 +1101,11 @@ var Game={
 
 							if (dino.type === T_REX) {
 								this.level++;
+								audioHandler.playEffect(LEVEL_UP_TRACK);
 								this.levelUpMessage.active = true;
 								this.lastTRexKilledPoints = this.points;
 								this.tRexSpawned = false;
+								audioHandler.playBgm(BGM_TRACK);
 								const { x, y } = this.powerups.getPositionFromDino(dino, POWERUP_HEART);
 								this.powerups.addHeart(x, y);
 							} else {
@@ -1252,6 +1138,7 @@ var Game={
 							if (!this.tRexSpawned && this.points >= this.lastTRexKilledPoints + Math.floor((1 + T_REX_SPAWN_INTERVAL_INCREASE * (this.level - 1)) * T_REX_SPAWN_INTERVAL)) {
 								this.dinosaurs.dinosaurs.push(this.dinosaurs.newTRex(this.game, this.level));
 								this.tRexSpawned = true;
+								audioHandler.playBgm(BOSS_BGM_TRACK);
 							}
 						}
 					}
@@ -1427,6 +1314,8 @@ var Game={
 			this.stop=false;
 			this.time=0;
 			this.drawCycle = true;
+			audioHandler.init();
+			audioHandler.playBgm(BGM_TRACK);
 			this.start();
 		}
 	},
@@ -1693,6 +1582,11 @@ var AL={	//AL - ActionListener
 					powerup.doEffect();
 					powerups.powerups.splice(i, 1);
 					i--;
+					if (powerup.heal) {
+						audioHandler.playEffect(HEAL_TRACK);
+					} else {
+						audioHandler.playEffect(POWERUP_TRACK);
+					}
 				}
 			}
 
