@@ -1272,8 +1272,8 @@ var Game={
 					gameplay.drawPickedFlamePowerups();
 					gameplay.drawBooms();
 					gameplay.drawTama();
-					gameplay.drawRocks();
 					gameplay.drawDinosaurs();
+					gameplay.drawRocks();
 					gameplay.rocks.addRocks(gameplay.game);
 					gameplay.dinosaurs.addDinosaurs(gameplay.game);
 					gameplay.drawPowerups();
