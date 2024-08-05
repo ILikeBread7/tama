@@ -13,6 +13,7 @@ const SUPERMAN_FLYING_TRACK = 'Climb_Rope_Loop_00.ogg';
 const LEVEL_UP_TRACK = 'Jingle_Achievement_00.ogg';
 const HEAL_TRACK = 'Pickup_01.ogg'
 const POWERUP_TRACK = 'Pickup_04.ogg'
+const SHIELD_TRACK = 'Jingle_Achievement_01.ogg';
 
 const audioHandler = (() => {
 	const trackNames = [
@@ -30,7 +31,8 @@ const audioHandler = (() => {
 		SUPERMAN_FLYING_TRACK,
         LEVEL_UP_TRACK,
         HEAL_TRACK,
-        POWERUP_TRACK
+        POWERUP_TRACK,
+        SHIELD_TRACK
 	];
 
 	const trackVolumes = new Map([
@@ -48,7 +50,8 @@ const audioHandler = (() => {
 		[SUPERMAN_FLYING_TRACK, 0.5],
         [LEVEL_UP_TRACK, 0.5],
         [HEAL_TRACK, 0.5],
-        [POWERUP_TRACK, 0.5]
+        [POWERUP_TRACK, 0.5],
+        [SHIELD_TRACK, 1]
 	]);
 
 	let tracksMapPromise = null;

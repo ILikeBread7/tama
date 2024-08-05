@@ -24,33 +24,35 @@ const POWERUP_CLOCK = 3;
 const POWERUP_FUEL = 4;
 
 const TAMA_STANDARD_SPEED = 2.4;
-const TAMA_SLOWDOWN_SPEED = 0.6;
+const TAMA_SLOWDOWN_SPEED = 0.65;
 const TAMA_SLOWDOWN_FUEL_MAX = 200;
 const TAMA_FUEL_MAX = 300;
 const TAMA_FUEL_REPLENISH_RATE = 1.75;
 const TAMA_MAX_INVINCIBILITY = 10 * 60;
 const TAMA_MAX_HP = 5;
 
-const MAX_FLAME_POWERUP_LEVEL = 6;
-const TAMA_FLAME_UPGRADE_HEIGHT = 1.5 / MAX_FLAME_POWERUP_LEVEL;
-const TAMA_FLAME_UPGRADE_WIDTH = 0.5;
+const MAX_FLAME_POWERUP_LEVEL = 4;
+const TAMA_FLAME_UPGRADE_HEIGHT = 1 / 6;
+const TAMA_FLAME_UPGRADE_WIDTH = 5 / 12;
 
 const MAX_FUEL_POWERUP_LEVEL = 4;
 const TAMA_FUEL_UPGRADE = 0.25;
 
-const TAMA_FLAME_W = 128;
-const TAMA_FLAME_H = 64;
+const TAMA_FLAME_IMG_W = 128;
+const TAMA_FLAME_IMG_H = 64;
+const TAMA_FLAME_W = Math.floor(TAMA_FLAME_IMG_W * 1.5);
+const TAMA_FLAME_H = Math.floor(TAMA_FLAME_IMG_H * 1.5);
 
-const POWERUP_FLAME_DROP_RATE = 0.1;
-const POWERUP_FUEL_DROP_RATE = 0.05;
-const POWERUP_TIME_DROP_RATE = 0.05;
+const POWERUP_FLAME_DROP_RATE = 0.08;
+const POWERUP_FUEL_DROP_RATE = 0.06;
+const POWERUP_TIME_DROP_RATE = 0.06;
 
-const HEART_DROP_RATE = 0.05;
-const SHIELD_DROP_RATE = 0.05;
+const HEART_DROP_RATE = 0.03;
+const SHIELD_DROP_RATE = 0.02;
 const FUEL_DROP_RATE = 0.07;
 const CLOCK_DROP_RATE = 0.07;
 
-const T_REX_SPAWN_INTERVAL = 13;
+const T_REX_SPAWN_INTERVAL = 21;
 const T_REX_SPAWN_INTERVAL_INCREASE = 0.25;
 const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
 const DINOS_UP_DOWN_MOVEMENT_LEVEL = 1;
@@ -293,6 +295,7 @@ var Game={
 					},
 					doEffect: function() {
 						that.game.gameplay.tama.invincibilityTimer = TAMA_MAX_INVINCIBILITY;
+						audioHandler.playLoopingEffect(SHIELD_TRACK);
 					}
 				});
 			},
@@ -624,6 +627,9 @@ var Game={
 				}
 				if (this.invincibilityTimer > 0) {
 					this.invincibilityTimer = Math.max(this.invincibilityTimer - 1, 0);
+					if (this.invincibilityTimer <= 0) {
+						audioHandler.stopLoopingEffect(SHIELD_TRACK);
+					}
 				}
 			},
 			activateSlowdown: function(timePowerupLevel) {
@@ -1009,7 +1015,7 @@ var Game={
 			this.game.ctx.fillText("Kills:",435,30);
 			this.game.ctx.fillText('Level:', 670, 30);
 			this.game.ctx.fillText("Total score:", SCORE_X, 30);
-			this.game.ctx.fillText(this.calculateTotalScore(), SCORE_X + 120, 30);
+			this.game.ctx.fillText(this.calculateTotalScore().toLocaleString(), SCORE_X + 120, 30);
 			
 			this.game.ctx.fillText(this.timeFormat(this.time),80,30);
 			this.game.ctx.fillText(Math.floor(this.tama.x/100),275,30);
@@ -1077,12 +1083,13 @@ var Game={
 				this.game.ctx.drawImage(this.game.shield_img, this.tama.x - this.left_scroll + 3, this.tama.y + 12);
 			}
 			if(this.tama.shooting) {
+				const flameH = TAMA_FLAME_H * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE_HEIGHT);
 				this.game.ctx.drawImage(
 					this.tama.getFlameSprite(),
 					this.tama.x + this.tama.w - this.left_scroll,
-					this.tama.y - TAMA_FLAME_H * this.powerupLevel * TAMA_FLAME_UPGRADE_HEIGHT / 2,
+					this.tama.y - Math.floor((flameH - this.tama.h) / 2),
 					TAMA_FLAME_W * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE_WIDTH),
-					TAMA_FLAME_H * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE_HEIGHT)
+					flameH
 				);
 				audioHandler.playLoopingEffect(FIRE_TRACK);
 			} else {
@@ -1111,10 +1118,10 @@ var Game={
 			if(this.tama.shooting)
 				for(var i=0;i<this.dinosaurs.dinosaurs.length;i++){
 					var dino=this.dinosaurs.dinosaurs[i];
+					const flame_h = TAMA_FLAME_H * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE_HEIGHT);
 					var flame_x = this.tama.x + this.tama.w;
-					var flame_y = this.tama.y - TAMA_FLAME_H * this.powerupLevel * TAMA_FLAME_UPGRADE_HEIGHT / 2;
+					var flame_y = this.tama.y - Math.floor((flame_h - this.tama.h) / 2);
 					var flame_w = TAMA_FLAME_W * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE_WIDTH);
-					var flame_h = TAMA_FLAME_H * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE_HEIGHT);
 					if(dino.x<flame_x+flame_w && dino.x+dino.w>flame_x && dino.y+dino.h>flame_y && dino.y<flame_y+flame_h){
 						isHit = true;
 						dino.hp--;
@@ -1188,7 +1195,7 @@ var Game={
 			
 			this.game.ctx.fillStyle="#ffffff";
 			this.game.ctx.font="20px Verdana";
-			this.game.ctx.fillText("Your total score: "+score, SCORES_X + 10, SCORES_Y + 20);
+			this.game.ctx.fillText("Your total score: " + score.toLocaleString(), SCORES_X + 10, SCORES_Y + 20);
 			this.game.ctx.fillText("Top scores:", SCORES_X + 10, SCORES_Y + 50);
 			this.game.ctx.fillText("Press ESC / P to exit or Enter to play again!", SCORES_X + 10, SCORES_Y + 420);
 			var ctx=this.game.ctx;
@@ -1197,7 +1204,7 @@ var Game={
 
 			for (let i = 0; i < highscores.length; i++) {
 				ctx.fillStyle = i === currentScoreIndex ? '#00ff00' : '#ffffff';
-				ctx.fillText(`${i < 10 ? '' : ' '}${i + 1}. Level ${highscores[i].level}, Score: ${highscores[i].score}`, SCORES_X + 10, SCORES_Y + 80 + i * 30);
+				ctx.fillText(`${i < 10 ? '' : ' '}${i + 1}. Level ${highscores[i].level}, Score: ${highscores[i].score.toLocaleString()}`, SCORES_X + 10, SCORES_Y + 80 + i * 30);
 			}
 		},
 		showScores:function(){
