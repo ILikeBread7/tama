@@ -29,7 +29,7 @@ const TAMA_SLOWDOWN_FUEL_MAX = 200;
 const TAMA_FUEL_MAX = 300;
 const TAMA_FUEL_REPLENISH_RATE = 1.5;
 const TAMA_MAX_INVINCIBILITY = 10 * 60;
-const TAMA_MAX_HP = 3;
+const TAMA_MAX_HP = 5;
 
 const MAX_FLAME_POWERUP_LEVEL = 6;
 const TAMA_FLAME_UPGRADE_HEIGHT = 1.5 / MAX_FLAME_POWERUP_LEVEL;
@@ -992,20 +992,20 @@ var Game={
 			this.game.ctx.fillStyle="#c3c83b";
 			this.game.ctx.fillRect(0,GROUND_OFFSET,WIDTH,HEIGHT - 170);
 			
-			const SCORE_X = 190;
+			const SCORE_X = 905;
 
 			this.game.ctx.fillStyle="#ffffff";
 			this.game.ctx.font="20px Verdana";
 			this.game.ctx.fillText("Time:",15,30);
 			this.game.ctx.fillText("Distance:",175,30);
 			this.game.ctx.fillText("Kills:",435,30);
-			this.game.ctx.fillText("Total score:", SCORE_X, HEIGHT - 15);
 			this.game.ctx.fillText('Level:', 670, 30);
+			this.game.ctx.fillText("Total score:", SCORE_X, 30);
+			this.game.ctx.fillText(this.calculateTotalScore(), SCORE_X + 120, 30);
 			
 			this.game.ctx.fillText(this.timeFormat(this.time),80,30);
 			this.game.ctx.fillText(Math.floor(this.tama.x/100),275,30);
 			this.game.ctx.fillText(this.points,490,30);
-			this.game.ctx.fillText(this.calculateTotalScore(), SCORE_X + 120, HEIGHT - 15);
 			this.game.ctx.fillText(this.level, 735, 30);
 			
 			this.drawDots();
@@ -1025,11 +1025,11 @@ var Game={
 			const powerups = this.game.gameplay.powerupLevel;
 			const img = this.powerups.flameSprite;
 			for (let i = 0; i < powerups; i++) {
-				this.game.ctx.drawImage(img, 1050 + i * 30, HEIGHT - 60);
+				this.game.ctx.drawImage(img, 1000 + i * 30, HEIGHT - 60);
 			}	
 		},
 		drawFuel: function(){
-			const FUEL_X = 450;
+			const FUEL_X = 300;
 			const FUEL_BASE_W = 100;
 			const fuelTotalW = FUEL_BASE_W * (1 + this.game.gameplay.fuelPowerupLevel * TAMA_FUEL_UPGRADE);
 
@@ -1043,7 +1043,7 @@ var Game={
 			this.game.ctx.fillRect(FUEL_X + 60, HEIGHT- 35, fuel, 25);
 		},
 		drawSlowdownfuel:function(){
-			const DRAW_X = 720;
+			const DRAW_X = 600;
 			const FUEL_BASE_W = 100;
 			const fuelTotalW = FUEL_BASE_W * (1 + this.game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE);
 			
