@@ -976,15 +976,15 @@ var Game={
 			return Math.floor(this.tama.x/100*(1+this.points)) + this.bonus;
 		},
 		drawBackground:function(){
-			const bgColor = BG_COLORS[(this.level - 1) % BG_COLORS.length];
-
 			// Top and bottom panels
+			const bgColor = BG_COLORS[(this.level - 1) % BG_COLORS.length];
 			this.game.ctx.fillStyle = bgColor;
 			this.game.ctx.fillRect(0,0,WIDTH,45);
 			this.game.ctx.fillRect(0,HEIGHT - 45,WIDTH,45);
 
 			// "Grass"
-			this.game.ctx.fillStyle="#3bc870";
+			const grassColor = this.tRexSpawned ? '#c41229' : '#3bc870';
+			this.game.ctx.fillStyle = grassColor;
 			this.game.ctx.fillRect(0,45,WIDTH,40);
 			this.game.ctx.fillRect(0,HEIGHT - GROUND_OFFSET,WIDTH,40);		
 
