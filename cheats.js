@@ -19,7 +19,7 @@ class Cheats {
 
     static goToLevel(level) {
         const lvl = Math.floor(level);
-        if (lvl < 0) {
+        if (lvl <= 0) {
             console.log('Level must be above 0');
         }
         Game.gameplay.level = lvl;
@@ -28,7 +28,7 @@ class Cheats {
     static setTime(time) {
         const timer = Math.floor(time);
         if (timer < 0) {
-            console.log('Time must be above 0');
+            console.log('Time must not be below 0');
         }
         Game.gameplay.time = timer;
         Game.gameplay.tama.timer = timer;
