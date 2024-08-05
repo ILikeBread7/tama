@@ -897,7 +897,6 @@ var Game={
 					const rDiff = (Math.floor(dino.timer / 10) % 3) * 2;
 					const x = dino.x - this.left_scroll + 15;
 					const y = dino.y + Math.floor(dino.h / 2);
-					if(dino.type === TRICERATOPS) console.log(y, dino.y, dino.h)
 
 					this.game.ctx.fillStyle = '#ff0000';
 					this.game.ctx.beginPath();
