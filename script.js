@@ -472,8 +472,8 @@ var Game={
 					points: 3,
 					maxHp: 30,
 					hp: 30,
-					w: 95,
-					h: 148,
+					w: 148,
+					h: 95,
 					timer: 0,
 					type: TRICERATOPS,
 					speed: single ? (Math.floor(Math.random()) + 1) : (Math.floor(Math.random() * 3) - 2),
@@ -891,6 +891,24 @@ var Game={
 					dino.speed--;
 				}
 				this.game.ctx.drawImage(dino.getSprite(),dino.x-this.left_scroll,dino.y);
+				if (dino.timer % this.dinosaurs.laser_freq > this.dinosaurs.laser_freq - 60) {
+					const rBig = 6;
+					const rSmall = 3;
+					const rDiff = (Math.floor(dino.timer / 10) % 3) * 2;
+					const x = dino.x - this.left_scroll + 15;
+					const y = dino.y + Math.floor(dino.h / 2);
+					if(dino.type === TRICERATOPS) console.log(y, dino.y, dino.h)
+
+					this.game.ctx.fillStyle = '#ff0000';
+					this.game.ctx.beginPath();
+					this.game.ctx.arc(x, y, rBig + rDiff, 0, 2 * Math.PI);
+					this.game.ctx.fill();
+
+					this.game.ctx.fillStyle = '#ffffff';
+					this.game.ctx.beginPath();
+					this.game.ctx.arc(x, y, rSmall + rDiff, 0, 2 * Math.PI);
+					this.game.ctx.fill();
+				}
 				this.drawDinoLifeBar(dino.hp, dino.maxHp, dino.x - this.left_scroll, dino.y);
 			}
 		},
