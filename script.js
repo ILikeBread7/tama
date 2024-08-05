@@ -636,6 +636,7 @@ var Game={
 			deactivateSlowdown: function() {
 				this.slowdown = false;
 				this.speed = TAMA_STANDARD_SPEED;
+				audioHandler.playEffect(SLOWDOWN_OVER_TRACK);
 			},
 			moveDirection:function(directionX, directionY){
 				if(directionX === 1)
@@ -812,6 +813,13 @@ var Game={
 			timer: 0,
 			x: 600,
 			y: 72,
+			message: '',
+
+			activate: function(message) {
+				this.message = message;
+				this.timer = 0;
+				this.active = true;
+			},
 
 			update: function() {
 				if (this.active) {
@@ -945,23 +953,23 @@ var Game={
 		},
 		drawSupermanPoints: function() {
 			if (this.supermanPoints.active) {
+				const x = WIDTH - 120;
 				this.game.ctx.font = '24px Verdana';
 				this.game.ctx.fillStyle = '#ffffff';
 				this.game.ctx.strokeStyle = '#ff0000';
-				this.game.ctx.fillText(this.superman.getPoints(), 720, this.superman.y + 30);
-				this.game.ctx.strokeText(this.superman.getPoints(), 720, this.superman.y + 30);
+				this.game.ctx.fillText(this.superman.getPoints(), x, this.superman.y + 30);
+				this.game.ctx.strokeText(this.superman.getPoints(), x, this.superman.y + 30);
 			}
 		},
 		drawLevelUpMessage: function() {
 			if (this.levelUpMessage.active && (Math.floor(this.levelUpMessage.timer / 20) % 2)) {
 				this.game.ctx.fillStyle = '#000';
-				this.game.ctx.fillRect(this.levelUpMessage.x - 30, this.levelUpMessage.y - 25, 150, 35);
+				this.game.ctx.fillRect(this.levelUpMessage.x - 30, this.levelUpMessage.y - 25, 10 + 15 * this.levelUpMessage.message.length, 35);
 				this.game.ctx.font = '24px Verdana';
 				this.game.ctx.fillStyle = '#ffffff';
 				this.game.ctx.strokeStyle = '#ff0000';
-				const message = `Level ${this.game.gameplay.level}!!!`;
-				this.game.ctx.fillText(message, this.levelUpMessage.x, this.levelUpMessage.y);
-				this.game.ctx.strokeText(message, this.levelUpMessage.x, this.levelUpMessage.y);
+				this.game.ctx.fillText(this.levelUpMessage.message, this.levelUpMessage.x, this.levelUpMessage.y);
+				this.game.ctx.strokeText(this.levelUpMessage.message, this.levelUpMessage.x, this.levelUpMessage.y);
 			}
 		},
 		timeFormat:function(time){
@@ -1119,7 +1127,7 @@ var Game={
 							if (dino.type === T_REX) {
 								this.level++;
 								audioHandler.playEffect(LEVEL_UP_TRACK);
-								this.levelUpMessage.active = true;
+								this.levelUpMessage.activate(`Level ${this.level}!!!`);
 								this.lastTRexKilledPoints = this.points;
 								this.tRexSpawned = false;
 								audioHandler.playBgm(BGM_TRACK);
@@ -1156,6 +1164,7 @@ var Game={
 								this.dinosaurs.dinosaurs.push(this.dinosaurs.newTRex(this.game, this.level));
 								this.tRexSpawned = true;
 								audioHandler.playBgm(BOSS_BGM_TRACK);
+								this.levelUpMessage.activate('Boss battle!');
 							}
 						}
 					}

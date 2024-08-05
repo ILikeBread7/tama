@@ -5,6 +5,7 @@ const TAMA_DAMAGE_TRACK = '7.ogg';
 const LASER_TRACK = 'laser5.ogg';
 const SLOWDOWN_TRACK = 'Jump_00.ogg';
 const SLOWDOWN_FULL_TRACK = 'Jump_01.ogg';
+const SLOWDOWN_OVER_TRACK = 'Jump_03.ogg';
 const ENEMY_DAMAGE_TRACK = 'Skeleton Roar.ogg';
 const FIRE_TRACK = 'qubodupFireLoop.ogg';
 const SUPERMAN_POINTS_TRACK = 'Jingle_Win_00.ogg';
@@ -22,6 +23,7 @@ const audioHandler = (() => {
 		LASER_TRACK,
         SLOWDOWN_TRACK,
         SLOWDOWN_FULL_TRACK,
+        SLOWDOWN_OVER_TRACK,
 		ENEMY_DAMAGE_TRACK,
 		FIRE_TRACK,
 		SUPERMAN_POINTS_TRACK,
@@ -37,15 +39,16 @@ const audioHandler = (() => {
 		[EXPLOSION_TRACK, 2],
 		[TAMA_DAMAGE_TRACK, 1],
 		[LASER_TRACK, 2],
-		[SLOWDOWN_TRACK, 1],
-		[SLOWDOWN_FULL_TRACK, 1],
+		[SLOWDOWN_TRACK, 0.5],
+		[SLOWDOWN_FULL_TRACK, 0.5],
+		[SLOWDOWN_OVER_TRACK, 0.5],
 		[ENEMY_DAMAGE_TRACK, 2],
 		[FIRE_TRACK, 0.5],
-		[SUPERMAN_POINTS_TRACK, 1],
-		[SUPERMAN_FLYING_TRACK, 1],
-        [LEVEL_UP_TRACK, 1],
-        [HEAL_TRACK, 1],
-        [POWERUP_TRACK, 1]
+		[SUPERMAN_POINTS_TRACK, 0.5],
+		[SUPERMAN_FLYING_TRACK, 0.5],
+        [LEVEL_UP_TRACK, 0.5],
+        [HEAL_TRACK, 0.5],
+        [POWERUP_TRACK, 0.5]
 	]);
 
 	let tracksMapPromise = null;
