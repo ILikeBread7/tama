@@ -54,8 +54,6 @@ const CLOCK_DROP_RATE = 0.07;
 
 const T_REX_SPAWN_INTERVAL = 23;
 const T_REX_SPAWN_INTERVAL_INCREASE = 0.25;
-const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
-const DINOS_UP_DOWN_MOVEMENT_LEVEL = 1;
 
 const BG_COLORS = [
 	'#291eff',
@@ -462,7 +460,7 @@ var Game={
 					timer:0,
 					type: RAPTOR,
 					speed: single ? (Math.floor(Math.random()*2)+1) : (Math.floor(Math.random()*7)-2),
-					speedY: level >= T_REX_UP_DOWN_MOVEMENT_LEVEL ? (Math.floor(Math.random() * 10) - 5) : 0,
+					speedY: Math.floor(Math.random() * 10) - 5,
 					x: single ? (this.width+WIDTH+game.gameplay.left_scroll) : (Math.floor(Math.random()*this.width)+WIDTH+game.gameplay.left_scroll),
 					y:Math.floor(Math.random() * (HEIGHT - 170 - 60)) + GROUND_OFFSET,
 					getSprite:function(){
@@ -481,7 +479,7 @@ var Game={
 					timer: 0,
 					type: TRICERATOPS,
 					speed: single ? (Math.floor(Math.random()) + 1) : (Math.floor(Math.random() * 3) - 2),
-					speedY: level >= T_REX_UP_DOWN_MOVEMENT_LEVEL ? (Math.floor(Math.random() * 10) - 5) : 0,
+					speedY: Math.floor(Math.random() * 10) - 5,
 					x: single ? (this.width + WIDTH + game.gameplay.left_scroll) : (Math.floor(Math.random() * this.width) + WIDTH + game.gameplay.left_scroll),
 					y: Math.floor(Math.random() * (HEIGHT - 170 - 95)) + GROUND_OFFSET,
 					getSprite: function() {
@@ -491,6 +489,10 @@ var Game={
 			},
 			newTRex: function (game, level) {
 				var dinos = this;
+				let speedY = Math.floor(Math.random() * 10) - 4;
+				if (speedY === 0) {
+					speedY--;
+				}
 				return {
 					points: 8,
 					maxHp: 100 * (level + 1),
@@ -500,7 +502,7 @@ var Game={
 					timer: 0,
 					type: T_REX,
 					speed: game.gameplay.tama.getSpeed(),
-					speedY: level >= T_REX_UP_DOWN_MOVEMENT_LEVEL ? (Math.floor(Math.random() * 10) - 5) : 0,
+					speedY: speedY,
 					x: WIDTH + game.gameplay.left_scroll,
 					y: Math.floor(Math.random() * (HEIGHT - 170 - 95)) + GROUND_OFFSET,
 					getSprite: function() {
@@ -1259,30 +1261,36 @@ var Game={
 						gameplay.game.drawMenu();
 					}, 200);
 				}
-				else if(gameplay.pause) {
-					gameplay.game.al.gameListener.pollGamepads();
-					gameplay.drawPause();
-				}
 				else {
 					gameplay.game.al.gameListener.pollGamepads();
-					gameplay.left_scroll+=gameplay.tama.getSpeed();
-					gameplay.game.al.gameListener.setTamaShoot();
-					gameplay.game.al.gameListener.setTamaDirection();
-					gameplay.tama.move(gameplay.game.al.gameListener, gameplay.game);
-					gameplay.dinosaurs.moveDinosaurs(gameplay.game);
-					gameplay.lasers.moveLasers();
-					gameplay.powerups.movePowerups();
-					gameplay.checkDinosaurFlame();
-					if (gameplay.points >= gameplay.superman.pointsActivated + 10) {
-						gameplay.superman.activate(gameplay.points);
+					if (!gameplay.pause) {
+						gameplay.left_scroll+=gameplay.tama.getSpeed();
+						gameplay.game.al.gameListener.setTamaShoot();
+						gameplay.game.al.gameListener.setTamaDirection();
+						gameplay.tama.move(gameplay.game.al.gameListener, gameplay.game);
+						gameplay.dinosaurs.moveDinosaurs(gameplay.game);
+						gameplay.lasers.moveLasers();
+						gameplay.powerups.movePowerups();
+						gameplay.checkDinosaurFlame();
+						if (gameplay.points >= gameplay.superman.pointsActivated + 10) {
+							gameplay.superman.activate(gameplay.points);
+						}
+						if (gameplay.superman.move()) {
+							gameplay.bonus += gameplay.superman.getPoints();
+							gameplay.supermanPoints.active = true;
+							audioHandler.playEffect(SUPERMAN_POINTS_TRACK);
+						}
+						gameplay.supermanPoints.move();
+						gameplay.levelUpMessage.update();
+
+						gameplay.time++;
+						if(gameplay.time%(60*20)==0)
+							gameplay.rocks.increaseRockNumber();
+						if(gameplay.time%(60*40)==0){
+							gameplay.dinosaurs.increaseDinosaurNumber();
+							gameplay.dinosaurs.addSingleDino(gameplay.game);
+						}
 					}
-					if (gameplay.superman.move()) {
-						gameplay.bonus += gameplay.superman.getPoints();
-						gameplay.supermanPoints.active = true;
-						audioHandler.playEffect(SUPERMAN_POINTS_TRACK);
-					}
-					gameplay.supermanPoints.move();
-					gameplay.levelUpMessage.update();
 					gameplay.drawBackground();
 					gameplay.drawHearts();
 					gameplay.drawFuel();
@@ -1299,26 +1307,23 @@ var Game={
 					gameplay.drawSuperman();
 					gameplay.drawSupermanPoints();
 					gameplay.drawLevelUpMessage();
-					gameplay.time++;
-					if(gameplay.time%(60*20)==0)
-						gameplay.rocks.increaseRockNumber();
-					if(gameplay.time%(60*40)==0){
-						gameplay.dinosaurs.increaseDinosaurNumber();
-						gameplay.dinosaurs.addSingleDino(gameplay.game);
-					}
-					if(gameplay.tama.hp<=0){
-						clearInterval(interval);
-						gameplay.showScores();
-						gameplay.game.al.gamepadScoresInterval = setInterval(() => {
-							gameplay.game.al.gameListener.pollGamepads();
-							const keys = gameplay.game.al.gameListener.gamepadKeys;
-							if (keys.select) {
-								gameplay.game.al.gameListener.resetKeys();
-								gameplay.game.al.listenBackButton();
-							} else if (keys.start) {
-								gameplay.game.al.startGame();
-							}
-						}, 100 / 6);
+					if (gameplay.pause) {
+						gameplay.drawPause();
+					} else {
+						if (gameplay.tama.hp <= 0) {
+							clearInterval(interval);
+							gameplay.game.al.gamepadScoresInterval = setInterval(() => {
+								gameplay.showScores();
+								gameplay.game.al.gameListener.pollGamepads();
+								const keys = gameplay.game.al.gameListener.gamepadKeys;
+								if (keys.select) {
+									gameplay.game.al.gameListener.resetKeys();
+									gameplay.game.al.listenBackButton();
+								} else if (keys.start) {
+									gameplay.game.al.startGame();
+								}
+							}, 100 / 6);
+						}
 					}
 				}
 			},100/6);
