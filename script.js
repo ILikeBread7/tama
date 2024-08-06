@@ -33,7 +33,7 @@ const TAMA_MAX_HP = 5;
 
 const MAX_FLAME_POWERUP_LEVEL = 4;
 const TAMA_FLAME_UPGRADE_HEIGHT = 1 / 6;
-const TAMA_FLAME_UPGRADE_WIDTH = 5 / 12;
+const TAMA_FLAME_UPGRADE_WIDTH = 0.5;
 
 const MAX_FUEL_POWERUP_LEVEL = 4;
 const TAMA_FUEL_UPGRADE = 0.25;
@@ -52,7 +52,7 @@ const SHIELD_DROP_RATE = 0.02;
 const FUEL_DROP_RATE = 0.07;
 const CLOCK_DROP_RATE = 0.07;
 
-const T_REX_SPAWN_INTERVAL = 21;
+const T_REX_SPAWN_INTERVAL = 23;
 const T_REX_SPAWN_INTERVAL_INCREASE = 0.25;
 const T_REX_UP_DOWN_MOVEMENT_LEVEL = 1;
 const DINOS_UP_DOWN_MOVEMENT_LEVEL = 1;
@@ -905,10 +905,11 @@ var Game={
 					dino.speed--;
 				}
 				this.game.ctx.drawImage(dino.getSprite(),dino.x-this.left_scroll,dino.y);
-				if (dino.timer % this.dinosaurs.laser_freq > this.dinosaurs.laser_freq - 60) {
+				const laserWarning = 60;
+				if (dino.timer % this.dinosaurs.laser_freq > this.dinosaurs.laser_freq - laserWarning) {
 					const rBig = 6;
 					const rSmall = 3;
-					const rDiff = (Math.floor(dino.timer / 10) % 3) * 2;
+					const rDiff = Math.floor(((dino.timer % this.dinosaurs.laser_freq) - (this.dinosaurs.laser_freq - laserWarning)) / 15);
 					const x = dino.x - this.left_scroll + 15;
 					const y = dino.y + Math.floor(dino.h / 2);
 
