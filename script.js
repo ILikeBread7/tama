@@ -419,16 +419,17 @@ var Game={
 								const T_REX_EYE_LEVEL = 30;
 								const EUPHO_LEVEL = 50;
 								const TURRET_START = 10;
+								const TURRET_SPACE = 15;
 								const BASE_TURRET_ANGLE = Math.PI / 4 / 5;
 								const level = game.gameplay.level;
 								const tama = game.gameplay.tama;
 								if (level >= 5) {
-									game.gameplay.lasers.add(dino.x, dino.y + TURRET_START, BASE_TURRET_ANGLE * 3);
-									game.gameplay.lasers.add(dino.x, dino.y + dino.h - TURRET_START, -BASE_TURRET_ANGLE * 3);
+									game.gameplay.lasers.add(dino.x, dino.y + TURRET_START + TURRET_SPACE * 3, BASE_TURRET_ANGLE * 3);
+									game.gameplay.lasers.add(dino.x, dino.y + dino.h - TURRET_START - TURRET_SPACE * 3, -BASE_TURRET_ANGLE * 3);
 								}
 								if (level >= 4) {
-									game.gameplay.lasers.add(dino.x, dino.y + TURRET_START, BASE_TURRET_ANGLE * 2);
-									game.gameplay.lasers.add(dino.x, dino.y + dino.h - TURRET_START, -BASE_TURRET_ANGLE * 2);
+									game.gameplay.lasers.add(dino.x, dino.y + TURRET_START + TURRET_SPACE * 2, BASE_TURRET_ANGLE * 2);
+									game.gameplay.lasers.add(dino.x, dino.y + dino.h - TURRET_START - TURRET_SPACE * 2, -BASE_TURRET_ANGLE * 2);
 								}
 								if (level >= 3) {
 									game.gameplay.lasers.add(dino.x, dino.y + TURRET_START, level >= 8 ? this.aimAtTama(dino, tama) : BASE_TURRET_ANGLE);
