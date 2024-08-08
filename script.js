@@ -1101,7 +1101,7 @@ var Game={
 			}
 		},
 		drawPause: function() {
-			const PAUSE_WIDTH = 248;
+			const PAUSE_WIDTH = 310;
 			const PAUSE_HEIGHT = 100;
 			const PAUSE_X = (WIDTH - PAUSE_WIDTH) / 2;
 			const PAUSE_Y = (HEIGHT - PAUSE_HEIGHT) / 2;
@@ -1110,9 +1110,9 @@ var Game={
 			this.game.ctx.fillRect(PAUSE_X, PAUSE_Y, PAUSE_WIDTH, PAUSE_HEIGHT);
 			this.game.ctx.fillStyle = "#ffffff";
 			this.game.ctx.font = "20px Verdana";
-			this.game.ctx.fillText('Pause', PAUSE_X + 95, PAUSE_Y + 30);
-			this.game.ctx.fillText('Press ESC / P to continue', PAUSE_X + 3, PAUSE_Y + 55);
-			this.game.ctx.fillText('or H to exit', PAUSE_X + 75, PAUSE_Y + 80);
+			this.game.ctx.fillText('Pause', PAUSE_X + 125, PAUSE_Y + 30);
+			this.game.ctx.fillText('Press ESC / P / Start to continue', PAUSE_X + 3, PAUSE_Y + 55);
+			this.game.ctx.fillText('or H / Slowdown / Select to exit', PAUSE_X + 8, PAUSE_Y + 80);
 		},
 		addBoom:function(x,down_y){
 			this.booms.add(x,down_y);
@@ -1192,7 +1192,7 @@ var Game={
 			this.game.ctx.fillStyle="#000000";
 
 			const SCORES_WIDTH = 420;
-			const SCORES_HEIGHT = 430;
+			const SCORES_HEIGHT = 460;
 			const SCORES_X = (WIDTH - SCORES_WIDTH) / 2;
 			const SCORES_Y = (HEIGHT - SCORES_HEIGHT) / 2;
 			this.game.ctx.fillRect(SCORES_X, SCORES_Y, SCORES_WIDTH, SCORES_HEIGHT);
@@ -1201,7 +1201,8 @@ var Game={
 			this.game.ctx.font="20px Verdana";
 			this.game.ctx.fillText("Your total score: " + score.toLocaleString(), SCORES_X + 10, SCORES_Y + 20);
 			this.game.ctx.fillText("Top scores:", SCORES_X + 10, SCORES_Y + 50);
-			this.game.ctx.fillText("Press ESC / P to exit or Enter to play again!", SCORES_X + 10, SCORES_Y + 420);
+			this.game.ctx.fillText("Press ESC / P / Select to exit", SCORES_X + 10, SCORES_Y + 420);
+			this.game.ctx.fillText("or Enter / Start to play again!", SCORES_X + 10, SCORES_Y + 450);
 			var ctx=this.game.ctx;
 
 			const { highscores, currentScoreIndex } = this.updateHighscores(score, this.level);
@@ -1430,31 +1431,64 @@ var Game={
 
 		this.ctx.drawImage(this.title_img_front, 0, 0);
 
-		const instructionsOffset = 120;
+		const instructionsOffset = 10;
 		const leftOffset = 5;
 
-		this.ctx.fillStyle="#000000";
-		this.ctx.fillRect(leftOffset,100+instructionsOffset,450,295);
+		this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+		const TEXT_SPACING = 25;
+		this.ctx.fillRect(leftOffset, 100 + instructionsOffset, 450,  17 * TEXT_SPACING);
 		
-		this.ctx.fillStyle="#ffffff";
-		this.ctx.font="20px Verdana";
+		this.ctx.fillStyle = '#ffffff';
+		this.ctx.font = '18px Verdana';
 
-		this.ctx.fillText("In game controls:",leftOffset+5,120+instructionsOffset);
-		this.ctx.fillText("WASD - movement",leftOffset+5,150+instructionsOffset);
-		this.ctx.fillText("H - slowdown",leftOffset+5,180+instructionsOffset);
-		this.ctx.fillText("J - fire",leftOffset+5,210+instructionsOffset);
-		this.ctx.fillText("ESC / P - pause",leftOffset+5,240+instructionsOffset);
-		this.ctx.fillText("Gamepad support available!",leftOffset + 5, 270 + instructionsOffset);
+		let textY = 90;
+		this.ctx.fillText('Beat the enemies,  collect powerups, ', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('and defeat the boss at the end of each level!', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('Beat 8 levels before the game starts to loop!', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
 		
-		this.ctx.fillText("Every 10 kills you get a bonus!",leftOffset+5,355+instructionsOffset);
-		this.ctx.fillText("Total score = distance * (1 + kills) + bonus",leftOffset+5,385+instructionsOffset);
+		textY += TEXT_SPACING;
+		this.ctx.fillText('Every 10 kills you get a bonus!', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('Total score = distance * (1  +  kills)  +  bonus', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		
+		textY += TEXT_SPACING;
+		this.ctx.fillText('In game controls:',  leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('WASD - movement', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('H - slowdown', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('J - fire', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('ESC / P - pause', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('Gamepad support available!', leftOffset  +  5,  (textY += TEXT_SPACING)  +  instructionsOffset);
+		
+		textY += TEXT_SPACING;
+		this.ctx.fillText('Gamepad input tester,  press a button on', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('the gamepad and see what it does in the game!', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		
+		const gamepadKeys = pollGamepads();
+		let gamepadKeyText = 'No button pressed';
+		if (gamepadKeys.up) {
+			gamepadKeyText = 'Up';
+		} else if (gamepadKeys.down) {
+			gamepadKeyText = 'Down';
+		} else if (gamepadKeys.left) {
+			gamepadKeyText = 'Left';
+		} else if (gamepadKeys.right) {
+			gamepadKeyText = 'Right';
+		} else if (gamepadKeys.fire) {
+			gamepadKeyText = 'Fire';
+		} else if (gamepadKeys.special) {
+			gamepadKeyText = 'Slowdown';
+		} else if (gamepadKeys.start) {
+			gamepadKeyText = 'Start (Pause / Restart after losing)';
+		} else if (gamepadKeys.select) {
+			gamepadKeyText = 'Select (Exit after losing)';
+		}
+		this.ctx.fillText(gamepadKeyText, leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
 
 		const SIGN_W = 280;
 		const SIGN_H = 8;
 		const SIGN_X = WIDTH - SIGN_W;
 		const SIGN_Y = HEIGHT - SIGN_H;
 		this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-		this.ctx.fillRect(SIGN_X, SIGN_Y - 20, SIGN_W, SIGN_H + 20);
+		this.ctx.fillRect(SIGN_X, SIGN_Y - 20, SIGN_W, SIGN_H  +  20);
 		this.ctx.fillStyle = "#fff";
 		this.ctx.strokeStyle = "#555";
 		const sign = {
