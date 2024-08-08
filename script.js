@@ -12,6 +12,7 @@ let titleInterval = null;
 const WIDTH = 1280;
 const HEIGHT = 720;
 const GROUND_OFFSET = 85;
+const GROUND_HEIGHT = HEIGHT - 2 * GROUND_OFFSET;
 
 const RAPTOR = 0;
 const TRICERATOPS = 1;
@@ -462,7 +463,7 @@ var Game={
 					speed: single ? (Math.floor(Math.random()*2)+1) : (Math.floor(Math.random()*7)-2),
 					speedY: Math.floor(Math.random() * 10) - 5,
 					x: single ? (this.width+WIDTH+game.gameplay.left_scroll) : (Math.floor(Math.random()*this.width)+WIDTH+game.gameplay.left_scroll),
-					y:Math.floor(Math.random() * (HEIGHT - 170 - 60)) + GROUND_OFFSET,
+					y:Math.floor(Math.random() * (GROUND_HEIGHT - 60)) + GROUND_OFFSET,
 					getSprite:function(){
 						return dinos.raptorSprites[Math.floor(this.timer * (Math.abs(this.speed) + Math.abs(this.speedY)) / 40) % 2];
 					}
@@ -481,7 +482,7 @@ var Game={
 					speed: single ? (Math.floor(Math.random()) + 1) : (Math.floor(Math.random() * 3) - 2),
 					speedY: Math.floor(Math.random() * 10) - 5,
 					x: single ? (this.width + WIDTH + game.gameplay.left_scroll) : (Math.floor(Math.random() * this.width) + WIDTH + game.gameplay.left_scroll),
-					y: Math.floor(Math.random() * (HEIGHT - 170 - 95)) + GROUND_OFFSET,
+					y: Math.floor(Math.random() * (GROUND_HEIGHT - 95)) + GROUND_OFFSET,
 					getSprite: function() {
 						return dinos.triceratopsSprites[Math.floor(this.timer * (Math.abs(this.speed) + Math.abs(this.speedY)) / 40) % 2];
 					}
@@ -504,7 +505,7 @@ var Game={
 					speed: game.gameplay.tama.getSpeed(),
 					speedY: speedY,
 					x: WIDTH + game.gameplay.left_scroll,
-					y: Math.floor(Math.random() * (HEIGHT - 170 - 95)) + GROUND_OFFSET,
+					y: Math.floor(Math.random() * (GROUND_HEIGHT - 95)) + GROUND_OFFSET,
 					getSprite: function() {
 						return dinos.tRexSprites[Math.floor(this.timer * (Math.abs(this.speed) + Math.abs(this.speedY)) / 30) % 2];
 					}
@@ -660,7 +661,7 @@ var Game={
 			},
 			init:function(game){
 				this.x=0;
-				this.y=300-this.h/2;
+				this.y= Math.floor((GROUND_HEIGHT - this.h) / 2) + 85;
 				this.speed = TAMA_STANDARD_SPEED;
 				this.speed_multiplier=4;
 				this.movement_speed=5;
@@ -1008,7 +1009,7 @@ var Game={
 
 			// Ground
 			this.game.ctx.fillStyle="#c3c83b";
-			this.game.ctx.fillRect(0,GROUND_OFFSET,WIDTH,HEIGHT - 170);
+			this.game.ctx.fillRect(0,GROUND_OFFSET,WIDTH,GROUND_HEIGHT);
 			
 			const SCORE_X = 905;
 
@@ -1191,7 +1192,7 @@ var Game={
 			this.score=score;
 			this.game.ctx.fillStyle="#000000";
 
-			const SCORES_WIDTH = 420;
+			const SCORES_WIDTH = 350;
 			const SCORES_HEIGHT = 460;
 			const SCORES_X = (WIDTH - SCORES_WIDTH) / 2;
 			const SCORES_Y = (HEIGHT - SCORES_HEIGHT) / 2;
@@ -1200,16 +1201,16 @@ var Game={
 			this.game.ctx.fillStyle="#ffffff";
 			this.game.ctx.font="20px Verdana";
 			this.game.ctx.fillText("Your total score: " + score.toLocaleString(), SCORES_X + 10, SCORES_Y + 20);
-			this.game.ctx.fillText("Top scores:", SCORES_X + 10, SCORES_Y + 50);
-			this.game.ctx.fillText("Press ESC / P / Select to exit", SCORES_X + 10, SCORES_Y + 420);
-			this.game.ctx.fillText("or Enter / Start to play again!", SCORES_X + 10, SCORES_Y + 450);
+			this.game.ctx.fillText("Top scores:", SCORES_X + 110, SCORES_Y + 50);
+			this.game.ctx.fillText("Press ESC / P / Select to exit", SCORES_X + 35, SCORES_Y + 420);
+			this.game.ctx.fillText("or Enter / Start to play again!", SCORES_X + 35, SCORES_Y + 450);
 			var ctx=this.game.ctx;
 
 			const { highscores, currentScoreIndex } = this.updateHighscores(score, this.level);
 
 			for (let i = 0; i < highscores.length; i++) {
 				ctx.fillStyle = i === currentScoreIndex ? '#00ff00' : '#ffffff';
-				ctx.fillText(`${i < 10 ? '' : ' '}${i + 1}. Level ${highscores[i].level}, Score: ${highscores[i].score.toLocaleString()}`, SCORES_X + 10, SCORES_Y + 80 + i * 30);
+				ctx.fillText(`${i < 9 ? '\u2007' : ''}${i + 1}. Level ${highscores[i].level}, Score: ${highscores[i].score.toLocaleString()}`, SCORES_X + 30, SCORES_Y + 80 + i * 30);
 			}
 		},
 		showScores:function(){
@@ -1283,7 +1284,6 @@ var Game={
 						}
 						gameplay.supermanPoints.move();
 						gameplay.levelUpMessage.update();
-
 						gameplay.time++;
 						if(gameplay.time%(60*20)==0)
 							gameplay.rocks.increaseRockNumber();
@@ -1292,28 +1292,14 @@ var Game={
 							gameplay.dinosaurs.addSingleDino(gameplay.game);
 						}
 					}
-					gameplay.drawBackground();
-					gameplay.drawHearts();
-					gameplay.drawFuel();
-					gameplay.drawSlowdownfuel();
-					gameplay.drawPickedFlamePowerups();
-					gameplay.drawBooms();
-					gameplay.drawTama();
-					gameplay.drawDinosaurs();
-					gameplay.drawRocks();
-					gameplay.rocks.addRocks(gameplay.game);
-					gameplay.dinosaurs.addDinosaurs(gameplay.game);
-					gameplay.drawPowerups();
-					gameplay.drawLasers();
-					gameplay.drawSuperman();
-					gameplay.drawSupermanPoints();
-					gameplay.drawLevelUpMessage();
+					gameplay.drawScene();
 					if (gameplay.pause) {
 						gameplay.drawPause();
 					} else {
 						if (gameplay.tama.hp <= 0) {
 							clearInterval(interval);
 							gameplay.game.al.gamepadScoresInterval = setInterval(() => {
+								gameplay.drawScene();
 								gameplay.showScores();
 								gameplay.game.al.gameListener.pollGamepads();
 								const keys = gameplay.game.al.gameListener.gamepadKeys;
@@ -1328,6 +1314,24 @@ var Game={
 					}
 				}
 			},100/6);
+		},
+		drawScene: function() {
+			this.drawBackground();
+			this.drawHearts();
+			this.drawFuel();
+			this.drawSlowdownfuel();
+			this.drawPickedFlamePowerups();
+			this.drawBooms();
+			this.drawTama();
+			this.drawDinosaurs();
+			this.drawRocks();
+			this.rocks.addRocks(this.game);
+			this.dinosaurs.addDinosaurs(this.game);
+			this.drawPowerups();
+			this.drawLasers();
+			this.drawSuperman();
+			this.drawSupermanPoints();
+			this.drawLevelUpMessage();
 		},
 		init:function(game){
 			this.game=game;
@@ -1432,11 +1436,11 @@ var Game={
 		this.ctx.drawImage(this.title_img_front, 0, 0);
 
 		const instructionsOffset = 10;
-		const leftOffset = 5;
+		const leftOffset = 12;
 
 		this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
 		const TEXT_SPACING = 25;
-		this.ctx.fillRect(leftOffset, 100 + instructionsOffset, 450,  17 * TEXT_SPACING);
+		this.ctx.fillRect(leftOffset, 100 + instructionsOffset, 410,  18 * TEXT_SPACING);
 		
 		this.ctx.fillStyle = '#ffffff';
 		this.ctx.font = '18px Verdana';
@@ -1455,8 +1459,9 @@ var Game={
 		this.ctx.fillText('WASD - movement', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
 		this.ctx.fillText('H - slowdown', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
 		this.ctx.fillText('J - fire', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
-		this.ctx.fillText('ESC / P - pause', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('ESC / P / Start - pause', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
 		this.ctx.fillText('Gamepad support available!', leftOffset  +  5,  (textY += TEXT_SPACING)  +  instructionsOffset);
+		this.ctx.fillText('Click Start game or press Enter to start!', leftOffset  +  5,  (textY += TEXT_SPACING)  +  instructionsOffset);
 		
 		textY += TEXT_SPACING;
 		this.ctx.fillText('Gamepad input tester,  press a button on', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
@@ -1479,7 +1484,7 @@ var Game={
 		} else if (gamepadKeys.start) {
 			gamepadKeyText = 'Start (Pause / Restart after losing)';
 		} else if (gamepadKeys.select) {
-			gamepadKeyText = 'Select (Exit after losing)';
+			gamepadKeyText = 'Select (Exit after losing or on the pause screen)';
 		}
 		this.ctx.fillText(gamepadKeyText, leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
 
