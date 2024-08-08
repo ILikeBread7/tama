@@ -1436,7 +1436,7 @@ var Game={
 		this.ctx.drawImage(this.title_img_front, 0, 0);
 
 		const instructionsOffset = 10;
-		const leftOffset = 12;
+		const leftOffset = 10;
 
 		this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
 		const TEXT_SPACING = 25;
