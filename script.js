@@ -135,12 +135,16 @@ var Game={
 					for(var i=0;i<this.number-1;i++){
 						this.rocks.push({
 							x:Math.floor(Math.random()*this.width)+WIDTH+game.gameplay.left_scroll,
-							y:Math.floor(Math.random()*(430-rocks.wh))+GROUND_OFFSET
+							y:Math.floor(Math.random()*(430-rocks.wh))+GROUND_OFFSET,
+							w: rocks.wh,
+							h: rocks.wh
 						});
 					}
 					this.rocks.push({
 						x:this.width+WIDTH+game.gameplay.left_scroll,
-						y:Math.floor(Math.random()*(430-rocks.wh))+GROUND_OFFSET
+						y:Math.floor(Math.random()*(430-rocks.wh))+GROUND_OFFSET,
+						w: rocks.wh,
+						h: rocks.wh
 					});
 				}
 			},
@@ -738,7 +742,9 @@ var Game={
 				this.lasers.push({
 					x: laser_x,
 					y: laser_y,
-					angle: angle
+					angle: angle,
+					w: this.w,
+					h: this.h
 				});
 			},
 			moveLasers:function(){
@@ -1676,7 +1682,7 @@ var AL={	//AL - ActionListener
 			
 			for(var i=0;i<rocks.rocks.length;i++){
 				var rock=rocks.rocks[i];
-				if (this.singleCollission(tama, { x: rock.x, y: rock.y, w: rocks.wh, h: rocks.wh })) {
+				if (this.singleCollission(tama, rock)) {
 					return true;
 				}
 			}
@@ -1688,7 +1694,7 @@ var AL={	//AL - ActionListener
 			}
 			for(var i=0;i<lasers.lasers.length;i++){
 				var laser=lasers.lasers[i];
-				if (this.singleCollission(tama, { x: laser.x, y: laser.y, w: lasers.w, h: lasers.w })) {
+				if (this.singleCollission(tama, laser)) {
 					return true;
 				}
 			}
