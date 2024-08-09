@@ -1465,8 +1465,8 @@ var Game={
 		textY += TEXT_SPACING;
 		this.ctx.fillText('In game controls:',  leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
 		this.ctx.fillText('WASD - Movement (D-Pad / left stick)', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
-		this.ctx.fillText('H - Slowdown (X / Y on gamepad)', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
-		this.ctx.fillText('J - Fire (A / B on gamepad)', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('H (single press) - Slowdown (X / Y on gamepad)', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
+		this.ctx.fillText('J (hold) - Fire (A / B on gamepad)', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
 		this.ctx.fillText('ESC / P - Pause (Start on gamepad)', leftOffset + 5, (textY += TEXT_SPACING) + instructionsOffset);
 		this.ctx.fillText('Click Start game or press Enter to start!', leftOffset  +  5,  (textY += TEXT_SPACING)  +  instructionsOffset);
 		
