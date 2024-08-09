@@ -1119,7 +1119,7 @@ var Game={
 			this.game.ctx.font = "20px Verdana";
 			this.game.ctx.fillText('Pause', PAUSE_X + 125, PAUSE_Y + 30);
 			this.game.ctx.fillText('Press ESC / P / Start to continue', PAUSE_X + 3, PAUSE_Y + 55);
-			this.game.ctx.fillText('or H / Slowdown / Select to exit', PAUSE_X + 8, PAUSE_Y + 80);
+			this.game.ctx.fillText('or H / Select to exit', PAUSE_X + 65, PAUSE_Y + 80);
 		},
 		addBoom:function(x,down_y){
 			this.booms.add(x,down_y);
@@ -1565,12 +1565,8 @@ var AL={	//AL - ActionListener
 			if (keys.select && this.game.gameplay.pause) {
 				this.game.gameplay.stop = true;
 			}
-			if (keys.special) {
-				if (this.game.gameplay.pause) {
-					this.game.gameplay.stop = true;
-				} else {
-					this.game.gameplay.tama.activateSlowdown(this.game.gameplay.timePowerupLevel);
-				}
+			if (keys.special && !this.game.gameplay.pause) {
+				this.game.gameplay.tama.activateSlowdown(this.game.gameplay.timePowerupLevel);
 			}
 
 			this.gamepadKeys = keys;
