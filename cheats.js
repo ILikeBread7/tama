@@ -32,8 +32,8 @@ class Cheats {
         }
         Game.gameplay.time = timer;
         Game.gameplay.tama.timer = timer;
-        Game.gameplay.rocks.number = Math.min(Game.gameplay.rocks.max_number, 1 + Math.floor(timer / 120));
-        Game.gameplay.dinosaurs.number = Math.min(Game.gameplay.dinosaurs.max_number, 2 + Math.floor(timer / 240));
+        Game.gameplay.rocks.number = Math.min(Game.gameplay.rocks.max_number, Game.gameplay.rocks.minNumber + Math.floor(timer / 1200));
+        Game.gameplay.dinosaurs.number = Math.min(Game.gameplay.dinosaurs.max_number, Game.gameplay.dinosaurs.minNumber + Math.floor(timer / 2400));
     }
 
 }

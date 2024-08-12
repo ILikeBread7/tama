@@ -9,6 +9,8 @@ function collideGlobal(e) {	//for buttons
 
 let titleInterval = null;
 
+const MILIS_TO_FPS = 0.06;
+
 const WIDTH = 1280;
 const HEIGHT = 720;
 const GROUND_OFFSET = 85;
@@ -126,6 +128,7 @@ var Game={
 		rocks:{
 			sprite:null,
 			number:1,
+			minNumber: 1,
 			max_number:4,
 			width:2400,
 			wh:50,	//wh=width height
@@ -151,9 +154,8 @@ var Game={
 					});
 				}
 			},
-			increaseRockNumber:function(){
-				if(this.number<this.max_number)
-					this.number++;
+			increaseRockNumber: function(time) {
+				this.number = Math.min(this.max_number, this.minNumber + Math.floor(time / 1200));
 			},
 			init:function(game){
 				this.rocks=[];
@@ -196,15 +198,21 @@ var Game={
 				this.timePowerupSptite = game.time_powerup_img;
 			},
 
-			move: function(powerup) {
-				const speed = this.game.gameplay.tama.getSpeed() * 1.5;
-				powerup.timer++;
-				powerup.x += Math.max(60 - powerup.timer, 0) * speed / 60;
+			move: function(powerup, deltaTime) {
+				const speed = this.game.gameplay.tama.getStandardSpeed() * 1.5;
+				powerup.timer += deltaTime * MILIS_TO_FPS;
+				powerup.x = powerup.startX + this.moveFormula(powerup.timer, speed);
 			},
 
-			movePowerups: function() {
+			moveFormula: function(timer, speed) {
+				const MAX_TIMER = 60;
+				const effectiveTime = Math.min(timer, MAX_TIMER);
+				return Math.floor((MAX_TIMER * effectiveTime - (effectiveTime * effectiveTime) / 2) * (speed / MAX_TIMER));
+			},
+
+			movePowerups: function(deltaTime) {
 				for (let i = 0; i < this.powerups.length; i++) {
-					this.move(this.powerups[i]);
+					this.move(this.powerups[i], deltaTime);
 				}
 			},
 
@@ -215,6 +223,7 @@ var Game={
 					h: that.powerupH,
 					x: x,
 					y: y,
+					startX: x,
 					timer: 0,
 					heal: false,
 
@@ -234,6 +243,7 @@ var Game={
 					h: that.powerupH,
 					x: x,
 					y: y,
+					startX: x,
 					timer: 0,
 					heal: false,
 
@@ -254,6 +264,7 @@ var Game={
 					h: that.powerupH,
 					x: x,
 					y: y,
+					startX: x,
 					timer: 0,
 					heal: false,
 
@@ -274,6 +285,7 @@ var Game={
 					h: that.heartH,
 					x: x,
 					y: y,
+					startX: x,
 					timer: 0,
 					heal: true,
 
@@ -293,6 +305,7 @@ var Game={
 					h: that.shieldH,
 					x: x,
 					y: y,
+					startX: x,
 					timer: 0,
 					heal: true,
 
@@ -313,6 +326,7 @@ var Game={
 					h: that.fuelH,
 					x: x,
 					y: y,
+					startX: x,
 					timer: 0,
 					heal: true,
 
@@ -333,6 +347,7 @@ var Game={
 					h: that.clockH,
 					x: x,
 					y: y,
+					startX: x,
 					timer: 0,
 					heal: true,
 
@@ -380,12 +395,13 @@ var Game={
 			tRexSprites: [],
 			dinosaurs:[],
 			number:2,
+			minNumber: 2,
 			max_number:5,
 			width:2400,
 			laser_freq:60*3,
 			all_on_screen:true,
 			
-			moveDinosaurs:function(game){
+			moveDinosaurs: function(game, deltaTime) {
 				for(var i=0;i<this.dinosaurs.length;i++){
 					var dino=this.dinosaurs[i];
 					if (dino.type === T_REX) {
@@ -395,23 +411,23 @@ var Game={
 						} else if (tRexX + dino.w > WIDTH) {
 							dino.speed = game.gameplay.tama.getSpeed() * 0.95;
 						}
-						dino.x += dino.speed;
+						dino.x += dino.speed * deltaTime * MILIS_TO_FPS;
 					} else {
 						if (dino.x - game.gameplay.left_scroll <= WIDTH) {
-							dino.x+=dino.speed;
+							dino.x+=dino.speed * deltaTime * MILIS_TO_FPS;
 						}
 					}
 
 					if (dino.speedY) {
 						const maxY = HEIGHT - GROUND_OFFSET - dino.h;
-						dino.y = Math.min(Math.max(dino.y + dino.speedY, GROUND_OFFSET), maxY);
+						dino.y = Math.min(Math.max(dino.y + dino.speedY * deltaTime * MILIS_TO_FPS, GROUND_OFFSET), maxY);
 						if (dino.y <= GROUND_OFFSET || dino.y >= maxY) {
 							dino.speedY = -dino.speedY;
 						}
 					}
 
-					dino.timer++;
-					if (dino.timer % this.laser_freq === 0) {
+					dino.timer += deltaTime * MILIS_TO_FPS;
+					if (Math.floor(dino.timer) % this.laser_freq === 0) {
 						const LASERS_GAP = 10;
 						switch (dino.type) {
 							case RAPTOR:
@@ -532,9 +548,12 @@ var Game={
 					this.addSingleDino(game, game.gameplay.level);
 				}
 			},
-			increaseDinosaurNumber:function(){
-				if(this.number<this.max_number)
-					this.number++;
+			increaseDinosaurNumber: function(time, game) {
+				const oldNumber = this.number;
+				this.number = Math.min(this.max_number, this.minNumber + Math.floor(time / 2400));
+				if (this.number > oldNumber) {
+					this.addSingleDino(game);
+				}
 			},
 			init:function(game){
 				this.dinosaurs=[];
@@ -613,22 +632,25 @@ var Game={
 			getSpeed:function(){
 				return this.speed * this.speed_multiplier * this.getSpeedModifier();
 			},
+			getStandardSpeed: function() {
+				return TAMA_STANDARD_SPEED * this.speed_multiplier * this.getSpeedModifier();
+			},
 			resetTemps:function(){
 				this.directionX = 0;
 				this.directionY = 0;
 			},
-			move:function(gameListener, game){
-				this.x+=this.getSpeed();
+			move:function(gameListener, game, deltaTime){
+				this.x += this.getSpeed() * deltaTime * MILIS_TO_FPS;
 				gameListener.tamaMove(this.directionX, this.directionY);
 				this.shoot(game.gameplay.fuelPowerupLevel);
 				this.resetTemps();
-				this.timer++;
+				this.timer += deltaTime * MILIS_TO_FPS;
 				if (this.slowdown) {
-					this.slowdownFuel = Math.max(this.slowdownFuel - 1, 0);
+					this.slowdownFuel = Math.max(this.slowdownFuel - 1 * deltaTime * MILIS_TO_FPS, 0);
 				} else {
 					const maxFuel = TAMA_SLOWDOWN_FUEL_MAX * (1 + game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE);
 					const fuelWasFull = this.slowdownFuel >= maxFuel;
-					this.slowdownFuel = Math.min(this.slowdownFuel + TAMA_FUEL_REPLENISH_RATE * (1 + game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE), maxFuel);
+					this.slowdownFuel = Math.min(this.slowdownFuel + TAMA_FUEL_REPLENISH_RATE * (1 + game.gameplay.timePowerupLevel * TAMA_FUEL_UPGRADE) * deltaTime * MILIS_TO_FPS, maxFuel);
 					if (!fuelWasFull && this.slowdownFuel >= maxFuel) {
 						audioHandler.playEffect(SLOWDOWN_FULL_TRACK);
 					}
@@ -637,7 +659,7 @@ var Game={
 					this.deactivateSlowdown();
 				}
 				if (this.invincibilityTimer > 0) {
-					this.invincibilityTimer = Math.max(this.invincibilityTimer - 1, 0);
+					this.invincibilityTimer = Math.max(this.invincibilityTimer - 1 * deltaTime * MILIS_TO_FPS, 0);
 					if (this.invincibilityTimer <= 0) {
 						audioHandler.stopLoopingEffect(SHIELD_TRACK);
 					}
@@ -751,10 +773,10 @@ var Game={
 					speedY: this.speed * Math.sin(angle)
 				});
 			},
-			moveLasers:function(){
+			moveLasers: function(deltaTime) {
 				for (let i=0; i < this.lasers.length; i++) {
-					this.lasers[i].x -= this.lasers[i].speedX;
-					this.lasers[i].y -= this.lasers[i].speedY;
+					this.lasers[i].x -= this.lasers[i].speedX * deltaTime * MILIS_TO_FPS;
+					this.lasers[i].y -= this.lasers[i].speedY * deltaTime * MILIS_TO_FPS;
 				}
 			},
 			init:function(game){
@@ -777,10 +799,10 @@ var Game={
 					this.pointsActivated = Math.floor(points / 10) * 10;
 				}
 			},
-			move: function() {
+			move: function(deltaTime) {
 				if (this.active) {
-					this.x += this.speed;
-					this.timer++;
+					this.x += this.speed * deltaTime * MILIS_TO_FPS;
+					this.timer += deltaTime * MILIS_TO_FPS;
 					audioHandler.playLoopingEffect(SUPERMAN_FLYING_TRACK);
 				}
 				if (this.x > WIDTH) {
@@ -814,9 +836,9 @@ var Game={
 			maxTimer: 60 * 3,
 			timer: 0,
 
-			move: function() {
+			move: function(deltaTime) {
 				if (this.active) {
-					this.timer++;
+					this.timer += deltaTime * MILIS_TO_FPS;
 				}
 				if (this.timer >= this.maxTimer) {
 					this.reset();
@@ -841,9 +863,9 @@ var Game={
 				this.active = true;
 			},
 
-			update: function() {
+			update: function(deltaTime) {
 				if (this.active) {
-					this.timer++;
+					this.timer += deltaTime * MILIS_TO_FPS;
 				}
 				if (this.timer >= this.maxTimer) {
 					this.reset();
@@ -940,7 +962,7 @@ var Game={
 				this.drawDinoLifeBar(dino.hp, dino.maxHp, dino.x - this.left_scroll, dino.y);
 			}
 		},
-		drawBooms:function(){
+		drawBooms: function(deltaTime){
 			for(var i=0;i<this.booms.booms.length;i++){
 				var boom=this.booms.booms[i];
 				if(boom.x+this.booms.wh-this.left_scroll<0){
@@ -948,7 +970,7 @@ var Game={
 					i--;
 				}
 				this.game.ctx.drawImage(boom.getSprite(),boom.x-this.left_scroll,boom.y);
-				boom.timer++;
+				boom.timer += deltaTime * MILIS_TO_FPS;
 			}
 		},
 		drawLasers:function(){
@@ -1129,7 +1151,7 @@ var Game={
 		addBoom:function(x,down_y){
 			this.booms.add(x,down_y);
 		},
-		checkDinosaurFlame(){
+		checkDinosaurFlame(deltaTime){
 			let isHit = false;
 			if(this.tama.shooting)
 				for(var i=0;i<this.dinosaurs.dinosaurs.length;i++){
@@ -1140,7 +1162,7 @@ var Game={
 					var flame_w = TAMA_FLAME_W * (1 + this.powerupLevel * TAMA_FLAME_UPGRADE_WIDTH);
 					if(dino.x<flame_x+flame_w && dino.x+dino.w>flame_x && dino.y+dino.h>flame_y && dino.y<flame_y+flame_h){
 						isHit = true;
-						dino.hp--;
+						dino.hp -= deltaTime * MILIS_TO_FPS;
 						if(dino.hp<=0){
 							this.dinosaurs.dinosaurs.splice(i,1);
 							i--;
@@ -1278,36 +1300,34 @@ var Game={
 					}, 200);
 				}
 				else {
+					const oldTimer = gameplay.realTimer;
 					gameplay.realTimer = Date.now();
+					const deltaTime = gameplay.realTimer - oldTimer;
 					gameplay.game.al.gameListener.pollGamepads();
 					if (!gameplay.pause) {
-						gameplay.left_scroll+=gameplay.tama.getSpeed();
+						gameplay.left_scroll += gameplay.tama.getSpeed() * deltaTime * MILIS_TO_FPS;
 						gameplay.game.al.gameListener.setTamaShoot();
 						gameplay.game.al.gameListener.setTamaDirection();
-						gameplay.tama.move(gameplay.game.al.gameListener, gameplay.game);
-						gameplay.dinosaurs.moveDinosaurs(gameplay.game);
-						gameplay.lasers.moveLasers();
-						gameplay.powerups.movePowerups();
-						gameplay.checkDinosaurFlame();
+						gameplay.tama.move(gameplay.game.al.gameListener, gameplay.game, deltaTime);
+						gameplay.dinosaurs.moveDinosaurs(gameplay.game, deltaTime);
+						gameplay.lasers.moveLasers(deltaTime);
+						gameplay.powerups.movePowerups(deltaTime);
+						gameplay.checkDinosaurFlame(deltaTime);
 						if (gameplay.points >= gameplay.superman.pointsActivated + 10) {
 							gameplay.superman.activate(gameplay.points);
 						}
-						if (gameplay.superman.move()) {
+						if (gameplay.superman.move(deltaTime)) {
 							gameplay.bonus += gameplay.superman.getPoints();
 							gameplay.supermanPoints.active = true;
 							audioHandler.playEffect(SUPERMAN_POINTS_TRACK);
 						}
 						gameplay.supermanPoints.move();
-						gameplay.levelUpMessage.update();
-						gameplay.time++;
-						if(gameplay.time%(60*20)==0)
-							gameplay.rocks.increaseRockNumber();
-						if(gameplay.time%(60*40)==0){
-							gameplay.dinosaurs.increaseDinosaurNumber();
-							gameplay.dinosaurs.addSingleDino(gameplay.game);
-						}
+						gameplay.levelUpMessage.update(deltaTime);
+						gameplay.time += deltaTime * MILIS_TO_FPS;
+						gameplay.rocks.increaseRockNumber(gameplay.time);
+						gameplay.dinosaurs.increaseDinosaurNumber(gameplay.time, gameplay.game);
 					}
-					gameplay.drawScene();
+					gameplay.drawScene(deltaTime);
 					if (gameplay.pause) {
 						gameplay.drawPause();
 					} else {
@@ -1315,8 +1335,12 @@ var Game={
 							clearInterval(interval);
 							gameplay.score = gameplay.calculateTotalScore();
 							const { highscores, currentScoreIndex } = gameplay.updateHighscores(gameplay.score, gameplay.level);
+							let oldScoresTime = Date.now();
 							gameplay.game.al.gamepadScoresInterval = setInterval(() => {
-								gameplay.drawScene();
+								const newScoresTime = Date.now();
+								const deltaTime = newScoresTime - oldScoresTime;
+								oldScoresTime = newScoresTime;
+								gameplay.drawScene(deltaTime);
 								gameplay.showScores(highscores, currentScoreIndex);
 								gameplay.game.al.gameListener.pollGamepads();
 								const keys = gameplay.game.al.gameListener.gamepadKeys;
@@ -1332,13 +1356,13 @@ var Game={
 				}
 			},100/6);
 		},
-		drawScene: function() {
+		drawScene: function(deltaTime) {
 			this.drawBackground();
 			this.drawHearts();
 			this.drawFuel();
 			this.drawSlowdownfuel();
 			this.drawPickedFlamePowerups();
-			this.drawBooms();
+			this.drawBooms(deltaTime);
 			this.drawTama();
 			this.drawDinosaurs();
 			this.drawRocks();
