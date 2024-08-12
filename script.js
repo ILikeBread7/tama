@@ -11,6 +11,10 @@ let titleInterval = null;
 
 const MILIS_TO_FPS = 0.06;
 
+const PHASE_MENU = 0;
+const PHASE_GAMEPLAY = 1;
+const PHASE_HIGHSCORES = 2;
+
 const WIDTH = 1280;
 const HEIGHT = 720;
 const GROUND_OFFSET = 85;
@@ -83,7 +87,7 @@ var Game={
 	laser_img:null,
 	al:null,
 	drawCycle: true,
-	phase:0,	//0=menu
+	phase: PHASE_MENU,
 	menu:{
 		screenFactor: 1,
 		canvasTop: 0,
@@ -1244,7 +1248,7 @@ var Game={
 		},
 		showScores: function(highscores, currentScoreIndex) {
 			this.game.al.gameListener.resetKeys();
-			this.game.phase=3;
+			this.game.phase = PHASE_HIGHSCORES;
 			this.drawScores(highscores, currentScoreIndex);
 		},
 		updateHighscores: function(score, level) {
@@ -1293,7 +1297,7 @@ var Game={
 					clearInterval(interval);
 					gameplay.game.menu.button.hover = false;
 					gameplay.game.al.gameListener.resetKeys();
-					gameplay.game.phase=0;	//0=menu
+					gameplay.game.phase = PHASE_MENU;
 					titleInterval = setInterval(() => {
 						gameplay.game.drawTitle();
 						gameplay.game.drawMenu();
@@ -1445,7 +1449,7 @@ var Game={
 		this.superman1_img=document.getElementById("superman1_img");
 		this.superman2_img=document.getElementById("superman2_img");
 		this.ctx=this.canvas.getContext("2d");
-		this.phase=0;
+		this.phase = PHASE_MENU;
 		this.menu.init();
 		var game=this;
 
@@ -1751,13 +1755,13 @@ var AL={	//AL - ActionListener
 		}
 	},
 	startGame: function() {
-		this.game.phase = 2;	// 2=gameplay
+		this.game.phase = PHASE_GAMEPLAY;
 		$('#credits').hide();
 		clearInterval(this.gamepadScoresInterval);
 		this.game.gameplay.init(this.game);
 	},
 	listenBackButton:function(){
-		this.game.phase=0;	//0=menu
+		this.game.phase = PHASE_MENU;
 		this.game.menu.button.hover = false;
 		clearInterval(this.gamepadScoresInterval);
 		titleInterval = setInterval(() => {
@@ -1782,13 +1786,14 @@ var AL={	//AL - ActionListener
 		}
 	},
 	clicked:function(e){
-		if(this.game.phase==0)
+		if (this.game.phase === PHASE_MENU) {
 			this.phaseMenu(e);
-		else if(this.game.phase==2)
+		} else if (this.game.phase === PHASE_GAMEPLAY) {
 			this.phaseGameplay(e);
+		}
 	},
 	moved: function(e) {
-		if(this.game.phase === 0) {
+		if(this.game.phase === PHASE_MENU) {
 			const oldHover = this.game.menu.button.hover;
 			this.game.menu.button.hover = this.game.menu.button.collide(e);
 			if (this.game.menu.button.hover !== oldHover) {
@@ -1798,22 +1803,23 @@ var AL={	//AL - ActionListener
 	},
 	keydown:function(e){
 		switch (this.game.phase) {
-			case 0: // menu
+			case PHASE_MENU:
 				if (e.keyCode === 13) {
 					this.startGame();
 				}
 			break;
-			case 2: // gameplay
+			case PHASE_GAMEPLAY:
 				this.gameListener.keydown(e);
 			break;
-			case 3: // highscores
+			case PHASE_HIGHSCORES:
 				this.phaseScores(e);
 			break;
 		}
 	},
 	keyup:function(e){
-		if(this.game.phase==2)
+		if (this.game.phase=== PHASE_GAMEPLAY) {
 			this.gameListener.keyup(e);
+		}
 	}
 }
 
