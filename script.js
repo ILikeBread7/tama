@@ -107,12 +107,15 @@ var Game={
 	gameplay:{
 		game:null,
 		pause:false,
+		pauseStart: 0,
 		stop:false,
 		score:-1,
 		left_scroll:0,
 		points:0,
 		bonus:0,
 		time:0,
+		realTimerStart: 0,
+		realTimer: 0,
 		level: 1,
 		powerupLevel: 0,
 		fuelPowerupLevel: 0,
@@ -990,7 +993,7 @@ var Game={
 			}
 		},
 		timeFormat:function(time){
-			var t=time/60;
+			var t=time/1000;
 			var min=Math.floor(t/60);
 			var sec=Math.floor(t%60);
 			if(sec<=9)
@@ -1028,7 +1031,8 @@ var Game={
 			this.game.ctx.fillText("Total score:", SCORE_X, 30);
 			this.game.ctx.fillText(this.calculateTotalScore().toLocaleString(), SCORE_X + 120, 30);
 			
-			this.game.ctx.fillText(this.timeFormat(this.time),80,30);
+			const time = this.pause ? (this.pauseStart - this.realTimerStart) : (this.realTimer - this.realTimerStart);
+			this.game.ctx.fillText(this.timeFormat(time),80,30);
 			this.game.ctx.fillText(Math.floor(this.tama.x/100),275,30);
 			this.game.ctx.fillText(this.points,490,30);
 			this.game.ctx.fillText(this.level, 735, 30);
@@ -1249,11 +1253,14 @@ var Game={
 			localStorage.setItem(HIGHSCORES_STORAGE_ITEM, JSON.stringify(highscores));
 			return { highscores, currentScoreIndex };
 		},
-		togglePause:function(){
-			if(this.pause)
-				this.pause=false;
-			else
-				this.pause=true;
+		togglePause: function() {
+			if (this.pause) {
+				this.pause = false;
+				this.realTimerStart += Date.now() - this.pauseStart;
+			} else {
+				this.pause = true;
+				this.pauseStart = Date.now();
+			}
 		},
 		start:function(){
 			clearInterval(titleInterval);
@@ -1270,6 +1277,7 @@ var Game={
 					}, 200);
 				}
 				else {
+					gameplay.realTimer = Date.now();
 					gameplay.game.al.gameListener.pollGamepads();
 					if (!gameplay.pause) {
 						gameplay.left_scroll+=gameplay.tama.getSpeed();
@@ -1364,8 +1372,11 @@ var Game={
 			this.levelUpMessage.reset();
 			this.drawBackground();
 			this.pause=false;
+			this.pauseStart = 0;
 			this.stop=false;
 			this.time=0;
+			this.realTimerStart = Date.now();
+			this.realTimer = this.realTimerStart;
 			this.drawCycle = true;
 			audioHandler.init();
 			audioHandler.playBgm(BGM_TRACK);
