@@ -745,15 +745,16 @@ var Game={
 				this.lasers.push({
 					x: laser_x,
 					y: laser_y,
-					angle: angle,
 					w: this.w,
-					h: this.h
+					h: this.h,
+					speedX: this.speed * Math.cos(angle),
+					speedY: this.speed * Math.sin(angle)
 				});
 			},
 			moveLasers:function(){
 				for (let i=0; i < this.lasers.length; i++) {
-					this.lasers[i].x -= this.speed * Math.cos(this.lasers[i].angle);
-					this.lasers[i].y -= this.speed * Math.sin(this.lasers[i].angle);
+					this.lasers[i].x -= this.lasers[i].speedX;
+					this.lasers[i].y -= this.lasers[i].speedY;
 				}
 			},
 			init:function(game){
