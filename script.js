@@ -1246,7 +1246,6 @@ var Game={
 		},
 		showScores: function(highscores, currentScoreIndex) {
 			this.game.al.gameListener.resetKeys();
-			this.game.phase = PHASE_HIGHSCORES;
 			this.drawScores(highscores, currentScoreIndex);
 		},
 		updateHighscores: function(score, level) {
@@ -1288,71 +1287,70 @@ var Game={
 			}
 		},
 		start:function(){
-			var gameplay=this;
-			var interval=setInterval(function(){
-				if(gameplay.stop){
-					clearInterval(interval);
-					gameplay.game.menu.button.hover = false;
-					gameplay.game.al.gameListener.resetKeys();
-					gameplay.game.phase = PHASE_MENU;
-					titleAnimation();
-				}
-				else {
-					const oldTimer = gameplay.realTimer;
-					gameplay.realTimer = Date.now();
-					const deltaTime = gameplay.realTimer - oldTimer;
-					gameplay.game.al.gameListener.pollGamepads();
-					if (!gameplay.pause) {
-						gameplay.left_scroll += gameplay.tama.getSpeed() * deltaTime * MILIS_TO_FPS;
-						gameplay.game.al.gameListener.setTamaShoot();
-						gameplay.game.al.gameListener.setTamaDirection();
-						gameplay.tama.move(gameplay.game.al.gameListener, gameplay.game, deltaTime);
-						gameplay.dinosaurs.moveDinosaurs(gameplay.game, deltaTime);
-						gameplay.lasers.moveLasers(deltaTime);
-						gameplay.powerups.movePowerups(deltaTime);
-						gameplay.checkDinosaurFlame(deltaTime);
-						if (gameplay.points >= gameplay.superman.pointsActivated + 10) {
-							gameplay.superman.activate(gameplay.points);
-						}
-						if (gameplay.superman.move(deltaTime)) {
-							gameplay.bonus += gameplay.superman.getPoints();
-							gameplay.supermanPoints.active = true;
-							audioHandler.playEffect(SUPERMAN_POINTS_TRACK);
-						}
-						gameplay.supermanPoints.move();
-						gameplay.levelUpMessage.update(deltaTime);
-						gameplay.time += deltaTime * MILIS_TO_FPS;
-						gameplay.rocks.increaseRockNumber(gameplay.time);
-						gameplay.dinosaurs.increaseDinosaurNumber(gameplay.time, gameplay.game);
+			gameplayAnimation();
+		},
+		updateGame: function() {
+			if (this.stop) {
+				this.game.menu.button.hover = false;
+				this.game.al.gameListener.resetKeys();
+				this.game.phase = PHASE_MENU;
+				titleAnimation();
+			}
+			else {
+				const oldTimer = this.realTimer;
+				this.realTimer = Date.now();
+				const deltaTime = this.realTimer - oldTimer;
+				this.game.al.gameListener.pollGamepads();
+				if (!this.pause) {
+					this.left_scroll += this.tama.getSpeed() * deltaTime * MILIS_TO_FPS;
+					this.game.al.gameListener.setTamaShoot();
+					this.game.al.gameListener.setTamaDirection();
+					this.tama.move(this.game.al.gameListener, this.game, deltaTime);
+					this.dinosaurs.moveDinosaurs(this.game, deltaTime);
+					this.lasers.moveLasers(deltaTime);
+					this.powerups.movePowerups(deltaTime);
+					this.checkDinosaurFlame(deltaTime);
+					if (this.points >= this.superman.pointsActivated + 10) {
+						this.superman.activate(this.points);
 					}
-					gameplay.drawScene(deltaTime);
-					if (gameplay.pause) {
-						gameplay.drawPause();
-					} else {
-						if (gameplay.tama.hp <= 0) {
-							clearInterval(interval);
-							gameplay.score = gameplay.calculateTotalScore();
-							const { highscores, currentScoreIndex } = gameplay.updateHighscores(gameplay.score, gameplay.level);
-							let oldScoresTime = Date.now();
-							gameplay.game.al.gamepadScoresInterval = setInterval(() => {
-								const newScoresTime = Date.now();
-								const deltaTime = newScoresTime - oldScoresTime;
-								oldScoresTime = newScoresTime;
-								gameplay.drawScene(deltaTime);
-								gameplay.showScores(highscores, currentScoreIndex);
-								gameplay.game.al.gameListener.pollGamepads();
-								const keys = gameplay.game.al.gameListener.gamepadKeys;
-								if (keys.select) {
-									gameplay.game.al.gameListener.resetKeys();
-									gameplay.game.al.listenBackButton();
-								} else if (keys.start) {
-									gameplay.game.al.startGame();
-								}
-							}, 100 / 6);
-						}
+					if (this.superman.move(deltaTime)) {
+						this.bonus += this.superman.getPoints();
+						this.supermanPoints.active = true;
+						audioHandler.playEffect(SUPERMAN_POINTS_TRACK);
+					}
+					this.supermanPoints.move();
+					this.levelUpMessage.update(deltaTime);
+					this.time += deltaTime * MILIS_TO_FPS;
+					this.rocks.increaseRockNumber(this.time);
+					this.dinosaurs.increaseDinosaurNumber(this.time, this.game);
+				}
+				this.drawScene(deltaTime);
+				if (this.pause) {
+					this.drawPause();
+				} else {
+					if (this.tama.hp <= 0) {
+						this.game.phase = PHASE_HIGHSCORES;
+						this.score = this.calculateTotalScore();
+						const { highscores, currentScoreIndex } = this.updateHighscores(this.score, this.level);
+						let oldScoresTime = Date.now();
+						this.game.al.gamepadScoresInterval = setInterval(() => {
+							const newScoresTime = Date.now();
+							const deltaTime = newScoresTime - oldScoresTime;
+							oldScoresTime = newScoresTime;
+							this.drawScene(deltaTime);
+							this.showScores(highscores, currentScoreIndex);
+							this.game.al.gameListener.pollGamepads();
+							const keys = this.game.al.gameListener.gamepadKeys;
+							if (keys.select) {
+								this.game.al.gameListener.resetKeys();
+								this.game.al.listenBackButton();
+							} else if (keys.start) {
+								this.game.al.startGame();
+							}
+						}, 100 / 6);
 					}
 				}
-			},100/6);
+			}
 		},
 		drawScene: function(deltaTime) {
 			this.drawBackground();

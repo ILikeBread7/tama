@@ -5,3 +5,11 @@ function titleAnimation(timestamp) {
         requestAnimationFrame(titleAnimation);
     }
 }
+
+function gameplayAnimation() {
+    if (Game.phase === PHASE_GAMEPLAY) {
+        Game.gameplay.updateGame();
+        requestAnimationFrame(gameplayAnimation);
+        console.log(Game.phase)
+    }
+}
