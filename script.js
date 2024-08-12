@@ -1332,24 +1332,21 @@ var Game={
 						this.game.phase = PHASE_HIGHSCORES;
 						this.score = this.calculateTotalScore();
 						const { highscores, currentScoreIndex } = this.updateHighscores(this.score, this.level);
-						let oldScoresTime = Date.now();
-						this.game.al.gamepadScoresInterval = setInterval(() => {
-							const newScoresTime = Date.now();
-							const deltaTime = newScoresTime - oldScoresTime;
-							oldScoresTime = newScoresTime;
-							this.drawScene(deltaTime);
-							this.showScores(highscores, currentScoreIndex);
-							this.game.al.gameListener.pollGamepads();
-							const keys = this.game.al.gameListener.gamepadKeys;
-							if (keys.select) {
-								this.game.al.gameListener.resetKeys();
-								this.game.al.listenBackButton();
-							} else if (keys.start) {
-								this.game.al.startGame();
-							}
-						}, 100 / 6);
+						highscoresAnimation(highscores, currentScoreIndex);
 					}
 				}
+			}
+		},
+		drawHighscores: function(highscores, currentScoreIndex, deltaTime) {
+			this.drawScene(deltaTime || 0);
+			this.showScores(highscores, currentScoreIndex);
+			this.game.al.gameListener.pollGamepads();
+			const keys = this.game.al.gameListener.gamepadKeys;
+			if (keys.select) {
+				this.game.al.gameListener.resetKeys();
+				this.game.al.listenBackButton();
+			} else if (keys.start) {
+				this.game.al.startGame();
 			}
 		},
 		drawScene: function(deltaTime) {
@@ -1551,7 +1548,6 @@ var Game={
 
 var AL={	//AL - ActionListener
 	game:null,
-	gamepadScoresInterval: null,
 	gameListener:{
 		game:null,
 		keys:[false,false,false,false,false,false,false],
@@ -1749,13 +1745,11 @@ var AL={	//AL - ActionListener
 	startGame: function() {
 		this.game.phase = PHASE_GAMEPLAY;
 		$('#credits').hide();
-		clearInterval(this.gamepadScoresInterval);
 		this.game.gameplay.init(this.game);
 	},
 	listenBackButton:function(){
 		this.game.phase = PHASE_MENU;
 		this.game.menu.button.hover = false;
-		clearInterval(this.gamepadScoresInterval);
 		titleAnimation();
 	},
 	phaseMenu:function(e){
