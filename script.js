@@ -429,7 +429,8 @@ var Game={
 					}
 
 					dino.timer += deltaTime * MILIS_TO_FPS;
-					if (Math.floor(dino.timer) % this.laser_freq === 0) {
+					if (dino.timer - dino.lastLaserTime >= this.laser_freq) {
+						dino.lastLaserTime = dino.timer - (dino.timer % this.laser_freq);
 						const LASERS_GAP = 10;
 						switch (dino.type) {
 							case RAPTOR:
@@ -484,6 +485,7 @@ var Game={
 					w:116,
 					h:60,
 					timer:0,
+					lastLaserTime: 0,
 					type: RAPTOR,
 					speed: single ? (Math.floor(Math.random()*2)+1) : (Math.floor(Math.random()*7)-2),
 					speedY: Math.floor(Math.random() * 10) - 5,
@@ -503,6 +505,7 @@ var Game={
 					w: 148,
 					h: 95,
 					timer: 0,
+					lastLaserTime: 0,
 					type: TRICERATOPS,
 					speed: single ? (Math.floor(Math.random()) + 1) : (Math.floor(Math.random() * 3) - 2),
 					speedY: Math.floor(Math.random() * 10) - 5,
@@ -526,6 +529,7 @@ var Game={
 					w: 149,
 					h: 121,
 					timer: 0,
+					lastLaserTime: 0,
 					type: T_REX,
 					speed: game.gameplay.tama.getSpeed(),
 					speedY: speedY,
