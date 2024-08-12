@@ -7,8 +7,6 @@ function collideGlobal(e) {	//for buttons
 	);
 }
 
-let titleInterval = null;
-
 const MILIS_TO_FPS = 0.06;
 
 const PHASE_MENU = 0;
@@ -1290,7 +1288,6 @@ var Game={
 			}
 		},
 		start:function(){
-			clearInterval(titleInterval);
 			var gameplay=this;
 			var interval=setInterval(function(){
 				if(gameplay.stop){
@@ -1298,10 +1295,7 @@ var Game={
 					gameplay.game.menu.button.hover = false;
 					gameplay.game.al.gameListener.resetKeys();
 					gameplay.game.phase = PHASE_MENU;
-					titleInterval = setInterval(() => {
-						gameplay.game.drawTitle();
-						gameplay.game.drawMenu();
-					}, 200);
+					titleAnimation();
 				}
 				else {
 					const oldTimer = gameplay.realTimer;
@@ -1466,7 +1460,7 @@ var Game={
 			game.al.keyup(e);
 		});
 	},
-	drawTitle:function(){
+	drawTitle: function(timestamp) {
 		audioHandler.stopAll();
 		this.ctx.drawImage(this.title_img_back, 0, 0);
 		$('#credits').show();
@@ -1479,7 +1473,7 @@ var Game={
 				this.ctx.drawImage(this.drawCycle ? this.flame1_title_img : this.flame2_title_img, x, y);
 			}
 		}
-		this.drawCycle = !this.drawCycle;
+		this.drawCycle = Math.floor(timestamp / 150) % 2 === 0;
 
 		this.ctx.drawImage(this.title_img_front, 0, 0);
 
@@ -1764,10 +1758,7 @@ var AL={	//AL - ActionListener
 		this.game.phase = PHASE_MENU;
 		this.game.menu.button.hover = false;
 		clearInterval(this.gamepadScoresInterval);
-		titleInterval = setInterval(() => {
-			this.game.drawTitle();
-			this.game.drawMenu();
-		}, 200);
+		titleAnimation();
 	},
 	phaseMenu:function(e){
 		if (this.game.menu.button.collide(e)) {
@@ -1838,8 +1829,5 @@ function init() {
 	AL.gameListener.game=Game;
 	Game.al=AL;
 	Game.init();
-	titleInterval = setInterval(() => {
-		Game.drawTitle();
-		Game.drawMenu();
-	}, 200);
+	titleAnimation();
 }
