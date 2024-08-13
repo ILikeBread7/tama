@@ -7,8 +7,8 @@ function titleAnimation(timestamp) {
 }
 
 function gameplayAnimation() {
+    Game.gameplay.updateGame();
     if (Game.phase === PHASE_GAMEPLAY) {
-        Game.gameplay.updateGame();
         requestAnimationFrame(gameplayAnimation);
     }
 }

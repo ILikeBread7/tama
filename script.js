@@ -162,7 +162,7 @@ var Game={
 			init:function(game){
 				this.rocks=[];
 				this.sprite=game.stone_img;
-				this.number=1;
+				this.number = this.minNumber;
 				this.all_on_screen=true;
 				this.addRocks(game);
 			}
@@ -575,7 +575,7 @@ var Game={
 					this.tRexSprites.push(game.tRex1_img);
 					this.tRexSprites.push(game.tRex2_img);
 				}
-				this.number=2;
+				this.number = this.minNumber;
 				this.width=2400;
 				this.all_on_screen=true;
 				this.addDinosaurs(game);

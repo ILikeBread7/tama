@@ -26,14 +26,15 @@ class Cheats {
     }
 
     static setTime(time) {
-        const timer = Math.floor(time);
-        if (timer < 0) {
+        if (time < 0) {
             console.log('Time must not be below 0');
         }
-        Game.gameplay.time = timer;
-        Game.gameplay.tama.timer = timer;
-        Game.gameplay.rocks.number = Math.min(Game.gameplay.rocks.max_number, Game.gameplay.rocks.minNumber + Math.floor(timer / 1200));
-        Game.gameplay.dinosaurs.number = Math.min(Game.gameplay.dinosaurs.max_number, Game.gameplay.dinosaurs.minNumber + Math.floor(timer / 2400));
+        const timerFps = Math.floor(time * MILIS_TO_FPS);
+        Game.gameplay.realTimerStart = Date.now() - Math.floor(time);
+        Game.gameplay.time = timerFps;
+        Game.gameplay.tama.timer = timerFps;
+        Game.gameplay.rocks.increaseRockNumber(timerFps)
+        Game.gameplay.dinosaurs.increaseDinosaurNumber(timerFps, Game);
     }
 
 }
@@ -44,7 +45,7 @@ This is the list of cheats:
 Cheats.finalLevel()
 Cheats.allPowerups()
 Cheats.goToLevel(level)
-Cheats.setTime(time [in frames, 1 second = 60 frames])
+Cheats.setTime(time [in miliseconds])
 
 In order to use them, type one of them into this console
 while the game is playing (not on the menu screen).`
