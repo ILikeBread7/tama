@@ -1597,7 +1597,7 @@ var AL={	//AL - ActionListener
 			if (keys.select && this.game.gameplay.pause) {
 				this.game.gameplay.stop = true;
 			}
-			if (keys.special && !this.game.gameplay.pause) {
+			if (keys.special && !this.game.gameplay.pause && this.game.gameplay.tama.hp > 0) {
 				this.game.gameplay.tama.activateSlowdown(this.game.gameplay.timePowerupLevel);
 			}
 
