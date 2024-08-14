@@ -647,7 +647,7 @@ var Game={
 			},
 			move:function(gameListener, game, deltaTime){
 				this.x += this.getSpeed() * deltaTime * MILIS_TO_FPS;
-				gameListener.tamaMove(this.directionX, this.directionY);
+				gameListener.tamaMove(this.directionX, this.directionY, deltaTime);
 				this.shoot(game.gameplay.fuelPowerupLevel);
 				this.resetTemps();
 				this.timer += deltaTime * MILIS_TO_FPS;
@@ -683,16 +683,16 @@ var Game={
 				this.speed = TAMA_STANDARD_SPEED;
 				audioHandler.playEffect(SLOWDOWN_OVER_TRACK);
 			},
-			moveDirection:function(directionX, directionY){
+			moveDirection:function(directionX, directionY, deltaTime){
 				if(directionX === 1)
-					this.x-=this.movement_speed;
+					this.x -= this.movement_speed * deltaTime * MILIS_TO_FPS;
 				else if(directionX === 2)
-					this.x+=this.movement_speed;
+					this.x += this.movement_speed * deltaTime * MILIS_TO_FPS;
 
 				if(directionY === 3)
-					this.y-=this.movement_speed;
+					this.y -= this.movement_speed * deltaTime * MILIS_TO_FPS;
 				else if(directionY === 4)
-					this.y+=this.movement_speed;
+					this.y += this.movement_speed * deltaTime * MILIS_TO_FPS;
 			},
 			init:function(game){
 				this.x=0;
@@ -1662,7 +1662,7 @@ var AL={	//AL - ActionListener
 				break;
 			}
 		},
-		inBounds:function(directionX, directionY){
+		inBounds:function(directionX, directionY, deltaTime){
 			var tama=this.game.gameplay.tama;
 			var x=tama.x-this.game.gameplay.left_scroll;
 			var y=tama.y;
@@ -1670,18 +1670,18 @@ var AL={	//AL - ActionListener
 			var h=tama.h;
 			switch(directionX){
 				case 1:
-					x-=tama.movement_speed;
+					x -= tama.movement_speed * deltaTime * MILIS_TO_FPS;
 				break;
 				case 2:
-					x+=tama.movement_speed;
+					x += tama.movement_speed * deltaTime * MILIS_TO_FPS;
 				break;
 			}
 			switch(directionY){
 				case 3:
-					y-=tama.movement_speed;
+					y -= tama.movement_speed * deltaTime * MILIS_TO_FPS;
 				break;
 				case 4:
-					y+=tama.movement_speed;
+					y += tama.movement_speed * deltaTime * MILIS_TO_FPS;
 				break;
 			}
 			return {
@@ -1738,10 +1738,10 @@ var AL={	//AL - ActionListener
 				&& object1.y + object1.h > object2.y + LEEWAY
 			);
 		},
-		tamaMove:function(directionX, directionY){
-			var isInBounds = this.inBounds(directionX, directionY);
+		tamaMove:function(directionX, directionY, deltaTime){
+			var isInBounds = this.inBounds(directionX, directionY, deltaTime);
 			if(isInBounds.x || isInBounds.y)
-				this.game.gameplay.tama.moveDirection(isInBounds.x ? directionX : 0, isInBounds.y ? directionY : 0);
+				this.game.gameplay.tama.moveDirection(isInBounds.x ? directionX : 0, isInBounds.y ? directionY : 0, deltaTime);
 			if(this.collides(this.game.gameplay.tama,this.game.gameplay.rocks,this.game.gameplay.dinosaurs,this.game.gameplay.lasers, this.game.gameplay.powerups))
 				this.game.gameplay.tama.hit();
 		}
